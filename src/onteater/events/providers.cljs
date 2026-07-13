@@ -14,7 +14,8 @@
             [cljs.reader :as reader]
             [onteater.llm.providers :as providers]
             [onteater.llm.client]     ; registers :llm/request, :llm/abort
-            [onteater.io.idb]))       ; registers :io/idb-save, :io/idb-load
+            [onteater.io.idb]         ; registers :io/idb-save, :io/idb-load
+            [onteater.io.crypto]))    ; registers :io/encrypt-save, :io/unlock-all
 
 (defn- provider-path
   "app-db path of a (non-Ollama) provider's settings map."
@@ -26,6 +27,9 @@
 (def ^:private status-resetting
   {:cloud #{:vendor :api-key :base-url}
    :azgov #{:base-url :deployment :api-version :auth-scheme :api-key}})
+
+;; Defined in the persistence section below; referenced by the field-edit events.
+(declare persistable-settings commit)
 
 ;; --- provider selection -------------------------------------------------------
 
@@ -43,22 +47,27 @@
    (let [db (assoc-in db [:llm :cloud k] v)
          ;; A vendor switch changes endpoint + model namespace wholesale:
          ;; re-derive the base URL from the preset and drop the stale model list.
+         ;; It also selects a different saved-credential slot, so clear the live
+         ;; key — one vendor's key must never linger under another.
          db (cond-> db
               (= :vendor k)
               (update-in [:llm :cloud] merge
                          {:base-url (get-in providers/cloud-presets [v :base-url] "")
-                          :model "" :models []})
+                          :model "" :models [] :api-key ""})
               (contains? (:cloud status-resetting) k)
               (update-in [:llm :cloud] merge {:status :unknown :status-msg nil}))]
-     {:db db :dispatch [:llm/persist-settings]})))
+     (commit db :cloud k))))
 
 (rf/reg-event-fx
  :llm/set-azgov-field
  (fn [{:keys [db]} [_ k v]]
    (let [db (cond-> (assoc-in db [:llm :azgov k] v)
+              ;; A different auth method is a different saved slot: clear the
+              ;; live key so a stored API key never shows in the token field.
+              (= :auth-scheme k) (assoc-in [:llm :azgov :api-key] "")
               (contains? (:azgov status-resetting) k)
               (update-in [:llm :azgov] merge {:status :unknown :status-msg nil}))]
-     {:db db :dispatch [:llm/persist-settings]})))
+     (commit db :azgov k))))
 
 ;; --- connection test -------------------------------------------------------------
 
@@ -144,18 +153,60 @@
 
 (defn persistable-settings
   "The subset of provider settings worth persisting: provider choice, Ollama
-  base-url/model/options, and the cloud/azgov configs minus volatile keys.
-  Each provider's :api-key is included ONLY when its :remember-key? is true —
-  keys are session-only by default (and stored unencrypted when opted in; the
-  Settings checkbox states this). Public for unit tests."
+  base-url/model/options, the cloud/azgov configs minus volatile/secret keys,
+  and the `:saved` map of ENCRYPTED credential blobs. A live plaintext `:api-key`
+  is stripped and never written — persistence of a key happens only through
+  `:saved`, keyed by slot, in encrypted form. Public for unit tests."
   [db]
-  (let [strip (fn [cfg]
-                (let [cfg (dissoc cfg :status :status-msg :models)]
-                  (if (:remember-key? cfg) cfg (dissoc cfg :api-key))))]
+  (let [strip #(dissoc % :status :status-msg :models :api-key)]
     {:active (get-in db [:llm :active])
      :ollama (select-keys (:ollama db) [:base-url :model :options])
      :cloud  (strip (get-in db [:llm :cloud]))
-     :azgov  (strip (get-in db [:llm :azgov]))}))
+     :azgov  (strip (get-in db [:llm :azgov]))
+     :saved  (get-in db [:llm :saved])}))
+
+(defn commit
+  "Effect map produced after a provider field edit writes `db`. Always persists
+  the non-secret settings; when the edited field affects the saved credential
+  (:api-key or :remember-key?) it additionally manages the encrypted slot:
+
+  - Remember off      → forget the slot's blob + any unlocked plaintext.
+  - Remember on, key present, passphrase already unlocked → encrypt silently.
+  - Remember toggled on without a passphrase → open the set/enter prompt.
+  - Key edited while remember-on but locked → keep it session-only (no prompt)."
+  [db provider changed]
+  (let [remember? (boolean (get-in db [:llm provider :remember-key?]))
+        slot      (providers/current-slot db)
+        keyval    (get-in db [:llm provider :api-key])
+        pp        (get-in db [:llm :crypto :passphrase])]
+    (cond
+      (not (contains? #{:api-key :remember-key?} changed))
+      {:db db :dispatch [:llm/persist-settings]}
+
+      (not remember?)
+      {:db (-> db (update-in [:llm :saved] dissoc slot)
+               (update-in [:llm :crypto :unlocked] dissoc slot))
+       :dispatch [:llm/persist-settings]}
+
+      (str/blank? keyval)
+      {:db db :dispatch [:llm/persist-settings]}
+
+      pp
+      {:db db
+       :io/encrypt-save {:passphrase pp :slot slot :plaintext keyval
+                         :on-done [:llm/blob-ready slot]}}
+
+      (= :remember-key? changed)
+      {:db (assoc-in db [:llm :crypto :prompt]
+                     {:mode (if (empty? (get-in db [:llm :saved])) :set :enter)
+                      :target slot
+                      :pending {:slot slot :plaintext keyval}
+                      :error nil})
+       :fx [[:dispatch [:ui/open-dialog {:kind :llm-crypto :on-cancel [:llm/prompt-cancel]}]]
+            [:dispatch [:llm/persist-settings]]]}
+
+      :else
+      {:db db :dispatch [:llm/persist-settings]})))
 
 (rf/reg-event-fx
  :llm/persist-settings
@@ -176,7 +227,104 @@
        db                                        ; nothing saved / corrupt — ignore
        (-> db
            (update-in [:llm :active] #(or (:active snap) %))
+           ;; New snapshots carry no plaintext :api-key; a LEGACY plaintext key
+           ;; (from before encryption) merges straight into the live field for
+           ;; back-compat and gets migrated into :saved on the next edit.
            (update-in [:llm :cloud] merge (when (map? (:cloud snap)) (:cloud snap)))
            (update-in [:llm :azgov] merge (when (map? (:azgov snap)) (:azgov snap)))
            (update :ollama merge (when (map? (:ollama snap))
-                                   (select-keys (:ollama snap) [:base-url :model :options]))))))))
+                                   (select-keys (:ollama snap) [:base-url :model :options])))
+           ;; Encrypted blobs only — live keys stay locked until the user
+           ;; explicitly loads one (no boot prompt).
+           (assoc-in [:llm :saved] (or (:saved snap) {})))))))
+
+;; --- credential encryption / unlock ------------------------------------------
+
+(rf/reg-event-fx
+ :llm/blob-ready
+ (fn [{:keys [db]} [_ slot blob]]
+   ;; :io/encrypt-save finished — store the ciphertext and cache the plaintext
+   ;; so a later "Load saved" for this slot fills without re-prompting.
+   (let [plaintext (get-in db [:llm (first slot) :api-key])]
+     {:db (cond-> (assoc-in db [:llm :saved slot] blob)
+            (seq plaintext) (assoc-in [:llm :crypto :unlocked slot] plaintext))
+      :dispatch [:llm/persist-settings]})))
+
+(rf/reg-event-fx
+ :llm/request-load-saved
+ (fn [{:keys [db]} _]
+   (let [slot     (providers/current-slot db)
+         pp       (get-in db [:llm :crypto :passphrase])
+         unlocked (get-in db [:llm :crypto :unlocked])]
+     (cond
+       (nil? slot) {}
+       ;; already unlocked and we hold this slot's plaintext → fill immediately
+       (and pp (contains? unlocked slot))
+       {:db (assoc-in db [:llm (first slot) :api-key] (get unlocked slot))}
+       ;; locked → prompt once; a valid passphrase unlocks every saved slot
+       :else
+       {:db (assoc-in db [:llm :crypto :prompt] {:mode :unlock :target slot :error nil})
+        :dispatch [:ui/open-dialog {:kind :llm-crypto :on-cancel [:llm/prompt-cancel]}]}))))
+
+(rf/reg-event-fx
+ :llm/unlock-submit
+ (fn [{:keys [db]} [_ passphrase]]
+   (let [saved (get-in db [:llm :saved])]
+     (if (empty? saved)
+       {:dispatch [:llm/unlock-ok passphrase {}]}
+       {:io/unlock-all {:passphrase passphrase :saved saved
+                        :on-ok   [:llm/unlock-ok passphrase]
+                        :on-fail [:llm/unlock-failed]}}))))
+
+(rf/reg-event-fx
+ :llm/unlock-ok
+ (fn [{:keys [db]} [_ passphrase plaintexts]]
+   (let [{:keys [target pending]} (get-in db [:llm :crypto :prompt])
+         db (-> db
+                (assoc-in [:llm :crypto :passphrase] passphrase)
+                (update-in [:llm :crypto :unlocked] merge plaintexts)
+                (assoc-in [:llm :crypto :prompt] nil))
+         db (cond-> db
+              (and target (contains? plaintexts target))
+              (assoc-in [:llm (first target) :api-key] (get plaintexts target)))]
+     (cond-> {:db db :dispatch [:ui/close-dialog]}
+       ;; a save was waiting on the passphrase (Remember toggled on while blobs
+       ;; already existed) → encrypt it now under the just-validated passphrase.
+       pending
+       (assoc :io/encrypt-save {:passphrase passphrase
+                                :slot (:slot pending)
+                                :plaintext (:plaintext pending)
+                                :on-done [:llm/blob-ready (:slot pending)]})))))
+
+(rf/reg-event-db
+ :llm/unlock-failed
+ (fn [db _]
+   (assoc-in db [:llm :crypto :prompt :error] "Incorrect passphrase.")))
+
+(rf/reg-event-fx
+ :llm/set-passphrase-submit
+ (fn [{:keys [db]} [_ passphrase]]
+   (let [pending (get-in db [:llm :crypto :prompt :pending])
+         db (-> db
+                (assoc-in [:llm :crypto :passphrase] passphrase)
+                (assoc-in [:llm :crypto :prompt] nil))]
+     (cond-> {:db db :dispatch [:ui/close-dialog]}
+       pending
+       (assoc :io/encrypt-save {:passphrase passphrase
+                                :slot (:slot pending)
+                                :plaintext (:plaintext pending)
+                                :on-done [:llm/blob-ready (:slot pending)]})))))
+
+(rf/reg-event-fx
+ :llm/prompt-cancel
+ (fn [{:keys [db]} _]
+   ;; Runs via :ui/dialog-cancel (Cancel button / backdrop / Esc), which already
+   ;; pops the dialog — so this only cleans up state; it must NOT pop again.
+   (let [{:keys [mode target]} (get-in db [:llm :crypto :prompt])
+         db (assoc-in db [:llm :crypto :prompt] nil)
+         db (case mode
+              ;; load flow: leave the key field blank, as specified
+              :unlock (cond-> db target (assoc-in [:llm (first target) :api-key] ""))
+              ;; save flow: undo the opt-in; the typed key stays session-only
+              (cond-> db target (assoc-in [:llm (first target) :remember-key?] false)))]
+     {:db db :dispatch [:llm/persist-settings]})))

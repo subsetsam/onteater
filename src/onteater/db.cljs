@@ -42,9 +42,16 @@
   provider-specific request/response knowledge lives in
   `onteater.llm.providers` — this map is only credentials + choices.
 
-  Security: `:api-key` values are held in memory as typed and are persisted to
-  IndexedDB (plaintext) ONLY when that provider's `:remember-key?` is true —
-  the Settings checkbox says so explicitly."
+  Security: a live `:api-key` is held in memory as typed and is NEVER written
+  to IndexedDB. When `:remember-key?` is true the key is instead encrypted (see
+  onteater.io.crypto) under a user passphrase and the ciphertext is stored in
+  `:saved`, keyed by a per-selection *slot* id:
+
+    [:cloud <vendor>]        — one blob per Cloud vendor (:anthropic/:openai/:custom)
+    [:azgov <auth-scheme>]   — one blob per Azure auth method (:api-key/:bearer)
+
+  `:crypto` is transient session state, never persisted: the in-memory passphrase
+  (nil = locked), the decrypted plaintexts, and the active passphrase-prompt."
   {:active :ollama            ; :ollama | :cloud | :azgov
    :cloud  {:vendor    :anthropic     ; :anthropic | :openai | :custom (OpenAI-compatible)
             :base-url  "https://api.anthropic.com" ; derived from :vendor preset unless :custom
@@ -61,7 +68,14 @@
             :api-key     ""           ; key or pasted bearer token
             :remember-key? false
             :status      :unknown
-            :status-msg  nil}})
+            :status-msg  nil}
+   ;; slot-id -> encrypted blob {:v :salt :iv :ct}; the only credential data
+   ;; that reaches IndexedDB, and only in encrypted form.
+   :saved  {}
+   ;; transient, in-memory only (never persisted):
+   :crypto {:passphrase nil          ; session passphrase; nil = locked
+            :unlocked   {}            ; slot-id -> decrypted plaintext key
+            :prompt     nil}})        ; {:mode :unlock|:enter|:set :target slot :error msg :pending {...}}
 
 (def default-view-spec
   "The ontology canvas always renders a *view specification*, never the whole

@@ -76,6 +76,17 @@
        :model    (:model o)
        :options  (:options o)})))
 
+(defn current-slot
+  "The saved-credential slot id for the active provider and its sub-selection:
+  `[:cloud <vendor>]` on the Cloud tab, `[:azgov <auth-scheme>]` on Azure Gov,
+  nil for Ollama (which has no key). Each slot holds an independently-encrypted
+  credential, so switching vendor or auth method selects a different saved key."
+  [db]
+  (case (get-in db [:llm :active] :ollama)
+    :cloud [:cloud (get-in db [:llm :cloud :vendor])]
+    :azgov [:azgov (get-in db [:llm :azgov :auth-scheme])]
+    nil))
+
 (defn ready?
   "nil when the cfg is complete enough to run mapping/chat, else a
   human-readable reason (surfaced verbatim as the run error)."

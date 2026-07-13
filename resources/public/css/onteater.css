@@ -445,6 +445,19 @@ h1, h2, h3 { margin: 0 0 0.4em; font-weight: 600; }
 .input-readonly { opacity: 0.65; }
 .btn-reveal { flex: 0 0 auto; padding: 6px 9px; }
 
+/* "Load saved key/token" dropdown on a secret input */
+.secret-menu { position: relative; flex: 0 0 auto; }
+.secret-menu-btn { padding: 6px 8px; }
+.secret-menu-pop { position: absolute; right: 0; top: calc(100% + 4px); z-index: 10;
+                   background: var(--bg-elevated); border: 1px solid var(--border);
+                   border-radius: var(--radius); box-shadow: 0 6px 20px rgba(0,0,0,0.28);
+                   padding: 4px; min-width: 170px; }
+.secret-menu-pop .secret-load { width: 100%; text-align: left; white-space: nowrap; }
+
+/* Passphrase (unlock / set) dialog */
+.crypto-dialog { max-width: 380px; }
+.crypto-dialog .insp-input { width: 100%; margin-bottom: 10px; }
+
 .conn-status { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 0; }
 .conn-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-faint); flex: 0 0 auto; }
 .conn-ok .conn-dot { background: var(--ok); }

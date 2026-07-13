@@ -70,5 +70,6 @@
          :confirm       [confirm-dialog dialog]
          :format-picker [format-picker-dialog dialog]
          :settings      [settings/panel]
+         :llm-crypto    [settings/crypto-prompt]
          :about         [about-dialog dialog]
          [confirm-dialog dialog])])))

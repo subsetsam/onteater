@@ -41,12 +41,17 @@
      [:p.conn-detail msg])])
 
 (defn- secret-input
-  "Password input with a 👁 reveal toggle. The reveal flag is component-local
-  (a Reagent atom) — never in app-db. Dispatches `on-set` with the value on
-  blur, matching the base-url input pattern."
+  "Password input with a 👁 reveal toggle and, when a saved (encrypted)
+  credential exists for the current selection, a ▾ dropdown offering to load it.
+  The reveal and menu flags are component-local (Reagent atoms) — never in
+  app-db. Dispatches `on-set` with the value on blur.
+
+  Props: :value :placeholder :on-set, plus optional :saved? :load-label :on-load
+  (the dropdown is shown only when :saved? is true)."
   [_props]
-  (let [reveal? (r/atom false)]
-    (fn [{:keys [value placeholder on-set]}]
+  (let [reveal? (r/atom false)
+        menu?   (r/atom false)]
+    (fn [{:keys [value placeholder on-set saved? load-label on-load]}]
       [:div.settings-row
        ^{:key value}
        [:input.insp-input {:type (if @reveal? "text" "password")
@@ -57,16 +62,73 @@
        [:button.btn.btn-reveal {:type "button"
                                 :title (if @reveal? "Hide key" "Show key")
                                 :on-click #(swap! reveal? not)}
-        (if @reveal? "🙈" "👁")]])))
+        (if @reveal? "🙈" "👁")]
+       (when saved?
+         [:div.secret-menu
+          [:button.btn.btn-reveal.secret-menu-btn
+           {:type "button" :title "Saved key" :on-click #(swap! menu? not)}
+           "▾"]
+          (when @menu?
+            [:div.secret-menu-pop
+             [:button.btn.secret-load
+              {:type "button" :on-click #(do (reset! menu? false) (on-load))}
+              (or load-label "Load saved key")]])])])))
 
 (defn- remember-key-checkbox
-  "The explicit opt-in for persisting an API key. The wording is deliberate:
-  IndexedDB storage is unencrypted, and the user should know that."
+  "The explicit opt-in for persisting an API key. The key is encrypted at rest
+  with a passphrase the user sets (see onteater.io.crypto); the wording says so."
   [checked? set-event]
   [:label.settings-check
    [:input {:type "checkbox" :checked (boolean checked?)
             :on-change #(rf/dispatch [set-event :remember-key? (.. % -target -checked)])}]
-   " Remember key on this device (stored unencrypted in this browser's storage)"])
+   " Remember key on this device (encrypted with a passphrase)"])
+
+(defn crypto-prompt
+  "The passphrase dialog for saved credentials — pushed onto the dialog stack as
+  {:kind :llm-crypto}. Three modes (from [:llm :crypto :prompt]):
+    :unlock — load a saved key (single field);
+    :enter  — a save needs the existing passphrase (single field);
+    :set    — first save; create a passphrase (field + confirm).
+  Cancel routes through :ui/dialog-cancel so the shared :on-cancel handler
+  (:llm/prompt-cancel) runs exactly once."
+  []
+  (let [pw  (r/atom "")
+        pw2 (r/atom "")]
+    (fn []
+      (let [{:keys [mode error]} @(rf/subscribe [:llm/crypto-prompt])
+            set?    (= mode :set)
+            mismatch? (and set? (seq @pw2) (not= @pw @pw2))
+            ok?     (and (seq @pw) (not mismatch?) (or (not set?) (seq @pw2)))
+            submit  (fn []
+                      (when ok?
+                        (if set?
+                          (rf/dispatch [:llm/set-passphrase-submit @pw])
+                          (rf/dispatch [:llm/unlock-submit @pw]))))
+            on-key  #(when (= "Enter" (.-key %)) (submit))]
+        [:div.dialog.crypto-dialog
+         [:h3.dialog-title (if set? "Set a passphrase" "Enter your passphrase")]
+         [:p.dialog-message
+          (if set?
+            "Your saved keys are encrypted with this passphrase. You'll enter it to load them later. It is never stored — if you forget it, re-enter your keys."
+            "Enter your passphrase to unlock your saved keys on this device.")]
+         [:input.insp-input.crypto-pw
+          {:type "password" :placeholder "Passphrase" :auto-focus true
+           :value @pw :auto-complete "off"
+           :on-change #(reset! pw (.. % -target -value))
+           :on-key-down on-key}]
+         (when set?
+           [:input.insp-input.crypto-pw2
+            {:type "password" :placeholder "Confirm passphrase"
+             :value @pw2 :auto-complete "off"
+             :on-change #(reset! pw2 (.. % -target -value))
+             :on-key-down on-key}])
+         (when mismatch? [:p.conn-detail "Passphrases don't match."])
+         (when error [:p.conn-detail error])
+         [:div.dialog-actions
+          [:button.btn {:on-click #(rf/dispatch [:ui/dialog-cancel])} "Cancel"]
+          [:button.btn.btn-primary.crypto-submit
+           {:disabled (not ok?) :on-click submit}
+           (if set? "Set passphrase" "Unlock")]]]))))
 
 ;; --- Ollama tab (the original panel body, selectors preserved for E2E) --------
 
@@ -170,7 +232,10 @@
       [:label.settings-label "API key"]
       [secret-input {:value (:api-key cloud)
                      :placeholder (case vendor :anthropic "sk-ant-…" :openai "sk-…" "token")
-                     :on-set #(rf/dispatch [:llm/set-cloud-field :api-key %])}]]
+                     :on-set #(rf/dispatch [:llm/set-cloud-field :api-key %])
+                     :saved? @(rf/subscribe [:llm/slot-saved?])
+                     :load-label "Load saved API key"
+                     :on-load #(rf/dispatch [:llm/request-load-saved])}]]
 
      [:div.settings-row
       [:button.btn.btn-primary.llm-test {:on-click #(rf/dispatch [:llm/test-connection])}
@@ -227,7 +292,10 @@
       [:label.settings-label (if (= :bearer (:auth-scheme az)) "Bearer token" "API key")]
       [secret-input {:value (:api-key az)
                      :placeholder (if (= :bearer (:auth-scheme az)) "eyJ0eXAi…" "key")
-                     :on-set #(rf/dispatch [:llm/set-azgov-field :api-key %])}]]
+                     :on-set #(rf/dispatch [:llm/set-azgov-field :api-key %])
+                     :saved? @(rf/subscribe [:llm/slot-saved?])
+                     :load-label (if (= :bearer (:auth-scheme az)) "Load saved token" "Load saved API key")
+                     :on-load #(rf/dispatch [:llm/request-load-saved])}]]
 
      [:div.settings-row
       [:button.btn.btn-primary.llm-test {:on-click #(rf/dispatch [:llm/test-connection])}

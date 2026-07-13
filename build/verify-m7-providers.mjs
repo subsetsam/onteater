@@ -10,7 +10,8 @@
  *    against a dead local port (never a real provider)
  *  - Azure Gov tab: CORS guidance help text present
  *  - persistence: non-secret fields survive a reload; an un-remembered API key
- *    does NOT; a remembered key DOES
+ *    does NOT; ticking "Remember" now opens a set-passphrase dialog and stores
+ *    ciphertext (never plaintext) — the full unlock cycle is in verify-m8
  *
  * Part B mocks api.anthropic.com with Playwright route interception and runs a
  * REAL mapping run through the Cloud/Anthropic path end-to-end: it asserts the
@@ -116,26 +117,31 @@ try {
   if (key1 !== "") fail(`un-remembered API key survived reload: "${key1}"`);
   console.log("  persistence: non-secret fields restored; key correctly forgotten");
 
-  // --- persistence: remember-key opt-in ---------------------------------------
+  // --- persistence: remember-key opt-in now ENCRYPTS (see verify-m8) ----------
+  // Ticking "Remember" no longer stores plaintext; it opens a set-passphrase
+  // dialog and persists only ciphertext. (The full unlock/load cycle lives in
+  // build/verify-m8-key-encryption.mjs; here we just guard the opt-in contract.)
   await page.fill(".settings-dialog input[type=password]", DUMMY_KEY); await blur();
-  // controlled checkbox: the checked prop flips only after the re-frame
-  // dispatch → render round-trip, so click + poll rather than page.check()
   await page.click(".settings-check input[type=checkbox]");
-  await page.waitForFunction(
-    () => document.querySelector(".settings-check input[type=checkbox]")?.checked,
-    null, { timeout: 3000 }
-  ).catch(() => fail("remember-key checkbox did not become checked"));
+  await page.waitForSelector(".crypto-dialog", { timeout: 4000 });
+  if ((await page.textContent(".crypto-dialog .dialog-title")) !== "Set a passphrase")
+    fail("remember-key opt-in did not open the set-passphrase dialog");
+  await page.fill(".crypto-pw", "pw-m7-passphrase");
+  await page.fill(".crypto-pw2", "pw-m7-passphrase");
+  await page.click(".crypto-submit");
+  await page.waitForSelector(".crypto-dialog", { state: "detached", timeout: 4000 });
   await page.waitForTimeout(700);
-  await page.reload({ waitUntil: "load" });
-  await openSettings();
-  await page.waitForFunction(
-    () => document.querySelector("select.cloud-vendor")?.value === "custom",
-    null, { timeout: 5000 }
-  ).catch(() => fail("settings not restored on second reload"));
-  const key2 = await page.inputValue(".settings-dialog input[type=password]");
-  if (key2 !== DUMMY_KEY) fail(`remembered API key not restored: "${key2}"`);
-  if (!(await page.isChecked(".settings-check input[type=checkbox]"))) fail("remember-key checkbox state not restored");
-  console.log("  persistence: opted-in key restored");
+  const rec = await page.evaluate(() => new Promise((res) => {
+    const req = indexedDB.open("onteater", 1);
+    req.onsuccess = () => {
+      const g = req.result.transaction("kv", "readonly").objectStore("kv").get("llm-settings");
+      g.onsuccess = () => res(g.result || ""); g.onerror = () => res("");
+    };
+    req.onerror = () => res("");
+  }));
+  if (rec.includes(DUMMY_KEY)) fail("plaintext key written to IndexedDB after opt-in");
+  if (!rec.includes("[:cloud :custom]")) fail("encrypted blob for the slot not persisted");
+  console.log("  persistence: opt-in encrypts the key (no plaintext at rest)");
 
   // --- Ollama tab untouched by all of the above --------------------------------
   await page.click(".settings-tab:has-text('Ollama')");
@@ -196,7 +202,17 @@ try {
   await openSettings();
   await page.click(".settings-tab:has-text('Cloud')");
   await page.selectOption("select.cloud-vendor", "anthropic");
-  await page.fill(".settings-dialog input[type=password]", DUMMY_KEY); await blur();
+  // A vendor switch clears the live key field (it selects a different saved
+  // slot); wait for that remount to settle, then fill and confirm it stuck so
+  // the on-blur dispatch carries the real value.
+  await page.waitForFunction(
+    () => document.querySelector(".settings-dialog input[type=password]")?.value === "",
+    null, { timeout: 3000 });
+  await page.fill(".settings-dialog input[type=password]", DUMMY_KEY);
+  await page.waitForFunction(
+    (k) => document.querySelector(".settings-dialog input[type=password]")?.value === k,
+    DUMMY_KEY, { timeout: 2000 });
+  await blur();
   await page.click(".llm-test");
   await page.waitForSelector(".conn-ok", { timeout: 8000 });
   await page.waitForSelector("select.cloud-model", { timeout: 3000 });

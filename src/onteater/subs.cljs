@@ -38,6 +38,19 @@
 (rf/reg-sub :llm/active (fn [db _] (get-in db [:llm :active])))
 (rf/reg-sub :llm/cloud  (fn [db _] (get-in db [:llm :cloud])))
 (rf/reg-sub :llm/azgov  (fn [db _] (get-in db [:llm :azgov])))
+
+;; --- saved-credential / passphrase-unlock state ------------------------------
+;; Whether the active provider+selection has an encrypted key on disk (drives
+;; the "Load saved…" option), whether the session is unlocked, and the state of
+;; the passphrase prompt dialog.
+(rf/reg-sub :llm/slot-saved?
+            (fn [db _]
+              (let [slot (providers/current-slot db)]
+                (boolean (and slot (contains? (get-in db [:llm :saved]) slot))))))
+(rf/reg-sub :llm/unlocked?
+            (fn [db _] (some? (get-in db [:llm :crypto :passphrase]))))
+(rf/reg-sub :llm/crypto-prompt
+            (fn [db _] (get-in db [:llm :crypto :prompt])))
 ;; "model (Provider)" string for the Run-mapping tooltip; nil when the active
 ;; provider has no model/deployment chosen yet.
 (rf/reg-sub :llm/active-model-label
