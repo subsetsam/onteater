@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Onteater">
+  <title>Onteater</title>
+  <defs>
+    <linearGradient id="lgHead" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F2E2C2"/>
+      <stop offset="100%" stop-color="#E2CDA4"/>
+    </linearGradient>
+    <linearGradient id="lgSnout" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4A4038"/>
+      <stop offset="100%" stop-color="#211D19"/>
+    </linearGradient>
+    <radialGradient id="lgOcean" cx="36%" cy="32%" r="72%">
+      <stop offset="0%" stop-color="#5AB0E8"/>
+      <stop offset="60%" stop-color="#2C7FC0"/>
+      <stop offset="100%" stop-color="#134C7C"/>
+    </radialGradient>
+    <clipPath id="lgGlobe"><circle cx="36" cy="39" r="7"/></clipPath>
+  </defs>
+
+  <!-- ear -->
+  <circle cx="16" cy="10" r="4" fill="#E2CDA4"/>
+  <circle cx="16.5" cy="10" r="2" fill="#C7987F"/>
+
+  <!-- head -->
+  <path d="M11 16 C 11 9 19 6 25 10 C 31 14 31 22 28 27 C 25 32 18 33 14 29 C 10 26 11 21 11 16 Z"
+        fill="url(#lgHead)"/>
+
+  <!-- snout (long, black) dipping toward the globe -->
+  <path d="M24 13 C 32 14 39 23 42 30 C 43 33 41 35 38 34 C 34 33 31 28 28 23 C 25 18 22 15 24 13 Z"
+        fill="url(#lgSnout)"/>
+  <circle cx="39.5" cy="32" r="1.6" fill="#0F0C0A"/>
+
+  <!-- eye -->
+  <circle cx="24" cy="16" r="2.4" fill="#1A1512"/>
+  <circle cx="23.2" cy="15.2" r="0.8" fill="#F4ECDD"/>
+
+  <!-- Earth ball -->
+  <circle cx="36" cy="39" r="7" fill="url(#lgOcean)"/>
+  <g clip-path="url(#lgGlobe)" fill="#4E9E52">
+    <path d="M30 35 C 33 33 37 35 37 38 C 37 41 33 41 31 39 C 29 38 29 36 30 35 Z"/>
+    <path d="M38 40 C 40 39 43 41 42 44 C 41 46 38 45 37 43 C 36 41 37 40 38 40 Z"/>
+    <circle cx="31" cy="43" r="1.8"/>
+  </g>
+  <circle cx="36" cy="39" r="7" fill="none" stroke="#0C3860" stroke-width="0.7" opacity="0.4"/>
+  <ellipse cx="33" cy="36" rx="3" ry="2.2" fill="#FFFFFF" opacity="0.35"/>
+</svg>

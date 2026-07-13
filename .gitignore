@@ -1,0 +1,20 @@
+# build artifacts
+/dist/
+/target/
+/resources/public/js/
+/.shadow-cljs/
+
+# dependencies
+/node_modules/
+
+# tooling caches
+/.cpcache/
+/.lsp/.cache/
+/.clj-kondo/.cache/
+*.log
+.DS_Store
+
+# planning docs (kept local, not published)
+/PLAN.md
+/LLMPLAN.md
+/CLAUDE.md

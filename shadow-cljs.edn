@@ -1,0 +1,30 @@
+;; shadow-cljs configuration for Onteater.
+;;
+;; Two builds:
+;;   :app  — the browser application (Reagent + re-frame + d3). Release output is a
+;;           single advanced-compiled JS file that the inline step (build/inline.mjs)
+;;           folds into dist/onteater.html together with the CSS and vendored assets.
+;;   :test — headless cljs.test runner (:node-test) covering the pure domain layer
+;;           (onteater.model.*, onteater.format.*, onteater.llm.prompts). Runs in CI.
+{:source-paths ["src" "test"]
+
+ :dependencies [[reagent "1.2.0"]
+                [re-frame "1.4.3"]]
+
+ ;; Local dev server (hot reload); irrelevant to the shipped artifact.
+ :dev-http {8080 "resources/public"}
+
+ :builds
+ {:app  {:target     :browser
+         :output-dir "resources/public/js"
+         :asset-path "js"
+         ;; One module -> release compiles to a single resources/public/js/main.js,
+         ;; which is what build/inline.mjs inlines. Keep it a single module so the
+         ;; single-file packaging stays trivial (no code-splitting/loader).
+         :modules    {:main {:init-fn onteater.core/init}}
+         :compiler-options {:output-feature-set :es2020}
+         :devtools   {:watch-dir "resources/public"}}
+
+  :test {:target    :node-test
+         :output-to "target/test.js"
+         :ns-regexp "-test$"}}}

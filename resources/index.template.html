@@ -1,0 +1,28 @@
+<!doctype html>
+<!--
+  Single-file template for Onteater.
+
+  build/inline.mjs replaces the three ONTEATER:* markers below with, respectively,
+  the concatenated CSS, any vendored asset <style>/<link> data (e.g. KaTeX fonts),
+  and the advanced-compiled application JavaScript — producing dist/onteater.html,
+  a fully self-contained page that opens from file:// with no network access
+  except the Ollama calls the user explicitly makes.
+
+  Constraints honoured by the inliner: no external URLs, no runtime
+  import(), no web workers, no document.write.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Onteater — Ontology Studio</title>
+    <!-- ONTEATER:STYLES -->
+  </head>
+  <body>
+    <div id="app">
+      <noscript>Onteater requires JavaScript (a compiled ClojureScript app).</noscript>
+    </div>
+    <!-- ONTEATER:SCRIPT -->
+  </body>
+</html>

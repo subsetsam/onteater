@@ -1,0 +1,54 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ss:   <http://example.org/solar-system#> .
+
+<http://example.org/solar-system> a owl:Ontology ;
+    rdfs:label "A tiny Solar System ontology" ;
+    owl:versionInfo "1.0" .
+
+# --- Classes -------------------------------------------------------------
+ss:CelestialBody a owl:Class ;
+    rdfs:label "Celestial body" ;
+    rdfs:comment "Anything in space with mass: a star, planet, moon, or asteroid." .
+
+ss:Star a owl:Class ;
+    rdfs:label "Star" ;
+    rdfs:subClassOf ss:CelestialBody .
+
+ss:Planet a owl:Class ;
+    rdfs:label "Planet" ;
+    rdfs:subClassOf ss:CelestialBody ;
+    rdfs:comment "A large body orbiting a star." .
+
+ss:Moon a owl:Class ;
+    rdfs:label "Moon" ;
+    rdfs:subClassOf ss:CelestialBody .
+
+# A subclass axiom using an anonymous restriction — Onteater does not model this
+# as an editable edge, so it must survive round-trips inside the residual block.
+ss:Planet rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty ss:orbits ;
+    owl:someValuesFrom ss:Star
+] .
+
+# --- Properties ----------------------------------------------------------
+ss:orbits a owl:ObjectProperty ;
+    rdfs:label "orbits" ;
+    rdfs:domain ss:CelestialBody ;
+    rdfs:range ss:CelestialBody .
+
+ss:mass a owl:DatatypeProperty ;
+    rdfs:label "mass (kg)" ;
+    rdfs:domain ss:CelestialBody ;
+    rdfs:range xsd:double .
+
+# --- Individuals ---------------------------------------------------------
+ss:Sun a owl:NamedIndividual , ss:Star ;
+    rdfs:label "The Sun" .
+
+ss:Earth a owl:NamedIndividual , ss:Planet ;
+    rdfs:label "Earth" ;
+    ss:orbits ss:Sun .

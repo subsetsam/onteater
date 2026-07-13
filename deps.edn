@@ -1,0 +1,11 @@
+;; Clojure tools.deps manifest.
+;;
+;; shadow-cljs is the primary build tool and reads its dependencies from
+;; shadow-cljs.edn; this file mirrors them so clj-based tooling (clj-kondo,
+;; clojure-lsp, editor integration) can resolve the same classpath. Keep the two
+;; dependency lists in sync.
+{:paths ["src" "test"]
+ :deps  {org.clojure/clojure       {:mvn/version "1.11.4"}
+         org.clojure/clojurescript {:mvn/version "1.11.132"}
+         reagent/reagent           {:mvn/version "1.2.0"}
+         re-frame/re-frame         {:mvn/version "1.4.3"}}}

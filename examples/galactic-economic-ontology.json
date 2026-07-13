@@ -1,0 +1,2592 @@
+{
+  "metadata": {
+    "title": "A Reference Ontology for Galactic Political Economy",
+    "subtitle": "Vocabulary, Structure, and Design Rationale for the Political-Economic Order of the Galaxy, 32 BBY – 4 ABY",
+    "version": "1.0 (first release; scoped strictly to the film canon, Episodes I–VI)",
+    "prepared": "2026-07-11",
+    "canon_policy": "Only events, institutions, and dialogue attested on screen in Episodes I–VI are admitted as evidence. Expanded-universe and spin-off material is excluded and treated as a separate, unaligned corpus.",
+    "upper_level_alignment": "BFO 2.0 (ISO/IEC 21838-2:2021)",
+    "namespace_note": "The prefix 'geo' here abbreviates Galactic Economic Ontology.",
+    "engineering_targets": {
+      "rigid_layer": "OWL 2 (W3C 2012)",
+      "soft_thesaurus": "SKOS (W3C 2009)",
+      "provenance": "PROV-O (W3C 2013)",
+      "temporal_indexing": "OWL-Time (W3C 2017), calendar anchored to the Battle of Yavin (BBY/ABY)",
+      "n_ary_pattern": "Noy & Rector (2006)"
+    },
+    "companion_documents": [
+      "Geoeconomics of a Galaxy Far, Far Away: A Critical Survey (fan monograph, 2026)",
+      "The Effective Geoeconomic Theory of the Trade Federation, 44–32 BBY",
+      "From Republic to Empire: Fiscal Centralization and the Death Star Appropriations",
+      "The Hutt Space Exception: Sovereignty and Order Beyond the Jurisdiction Boundary",
+      "The Tarkin Doctrine: Terror Capacity as a Substitute for Institutional Capacity",
+      "Clientelism in the Clouds: Bespin as a Connector Economy"
+    ]
+  },
+  "namespaces": {
+    "geo": "http://example.org/geo#",
+    "bfo": "http://purl.obolibrary.org/obo/bfo.owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "time": "http://www.w3.org/2006/time#",
+    "owl": "http://www.w3.org/2002/07/owl#"
+  },
+  "spine": {
+    "reference_section": "3",
+    "description": "BFO-aligned upper level. Continuants split into independent, specifically-dependent, and generically-dependent kinds; occurrents into acts, economic processes, episodes, observation processes, and temporal regions.",
+    "role_discipline_note": "No agent is intrinsically a sender, target, or connector, and no hyperlane junction is intrinsically a chokepoint; these are roles borne relative to episodes and indexed by time. Cloud City was a connector on one day and a compliance node the next.",
+    "disposition_discipline_note": "Power-words — leverage, dependence, vulnerability, resilience, credibility, and (this corpus's addition) fear — name dispositions of bearers, realized in processes and estimated by measurements. They are never identified with one another.",
+    "classes": [
+      {
+        "id": "geo:Entity",
+        "label": "Entity",
+        "kind": "Class",
+        "gloss": "Root class; disjoint union of Continuant and Occurrent (BFO)."
+      },
+      {
+        "id": "geo:Agent",
+        "label": "Agent",
+        "kind": "Class",
+        "subClassOf": "bfo:IndependentContinuant",
+        "gloss": "An intentional actor capable of individual or organ-mediated action: polities, guilds, syndicates, orders, households, droids of contested status."
+      },
+      {
+        "id": "geo:MaterialEntity",
+        "label": "Material entity",
+        "kind": "Class",
+        "subClassOf": "bfo:IndependentContinuant",
+        "gloss": "Goods, facilities, stockpiles, starships, and other physical bearers."
+      },
+      {
+        "id": "geo:NetworkStructure",
+        "label": "Network structure",
+        "kind": "Class",
+        "subClassOf": "bfo:IndependentContinuant",
+        "gloss": "Nodes, edges, layers — the hyperlane, financial, and political substrates of Module NET."
+      },
+      {
+        "id": "geo:Quality",
+        "label": "Quality",
+        "kind": "Class",
+        "subClassOf": "bfo:SpecificallyDependentContinuant",
+        "gloss": "Formality, salience, publicity, and other qualities of acts and measures."
+      },
+      {
+        "id": "geo:Role",
+        "label": "Role",
+        "kind": "Class",
+        "subClassOf": "bfo:SpecificallyDependentContinuant",
+        "gloss": "Time-indexed role borne relative to an episode or configuration."
+      },
+      {
+        "id": "geo:Disposition",
+        "label": "Disposition",
+        "kind": "Class",
+        "subClassOf": "bfo:SpecificallyDependentContinuant",
+        "gloss": "Power-words as dispositions of bearers; realized in processes, never observed directly."
+      },
+      {
+        "id": "geo:InformationArtifact",
+        "label": "Information artifact",
+        "kind": "Class",
+        "subClassOf": "bfo:GenericallyDependentContinuant",
+        "gloss": "Documents, archives, treaties-as-texts, strategies, measurements, models."
+      },
+      {
+        "id": "geo:DeonticEntity",
+        "label": "Deontic entity",
+        "kind": "Class",
+        "subClassOf": "bfo:GenericallyDependentContinuant",
+        "gloss": "Measures in force, legal bases, charters, debts, bounties, memberships, statuses."
+      },
+      {
+        "id": "geo:Act",
+        "label": "Act",
+        "kind": "Class",
+        "subClassOf": "bfo:Process",
+        "gloss": "Policy actions, speech acts, enforcement acts, document acts (EPI §8.1–8.2)."
+      },
+      {
+        "id": "geo:EconomicProcess",
+        "label": "Economic process",
+        "kind": "Class",
+        "subClassOf": "bfo:Process",
+        "gloss": "Flows, adaptation, leakage, fragmentation (EPI §8.3)."
+      },
+      {
+        "id": "geo:Episode",
+        "label": "Episode",
+        "kind": "Class",
+        "subClassOf": "bfo:Process",
+        "gloss": "Coercion episodes, escalation sequences, campaigns (EPI §8.2, §8.5). The term is used in its technical sense; the collision with 'Episode IV' is regretted but unavoidable."
+      },
+      {
+        "id": "geo:ObservationProcess",
+        "label": "Observation process",
+        "kind": "Class",
+        "subClassOf": "bfo:Process",
+        "gloss": "Recording, coding, archiving (EPI §8.4, MSR §13). In this corpus the archive itself is an actor: see geo:ArchiveErasure."
+      },
+      {
+        "id": "geo:TemporalRegion",
+        "label": "Temporal region",
+        "kind": "Class",
+        "subClassOf": "bfo:TemporalRegion",
+        "gloss": "Horizons, windows, construction schedules, deadlines."
+      },
+      {
+        "id": "geo:Instrument",
+        "label": "Instrument",
+        "kind": "Class",
+        "subClassOf": "geo:DeonticEntity",
+        "gloss": "Type-level standing policy tool: blockade, route tax, bounty, franchise (Baldwin's razor, imported intact)."
+      },
+      {
+        "id": "geo:InstrumentAction",
+        "label": "Instrument action",
+        "kind": "Class",
+        "subClassOf": "geo:Act",
+        "gloss": "Dated act creating, modifying, suspending, terminating, or enforcing a measure."
+      },
+      {
+        "id": "geo:MeasureInForce",
+        "label": "Measure in force",
+        "kind": "Class",
+        "subClassOf": "geo:DeonticEntity",
+        "gloss": "Standing deontic state created by an imposition; dissolved by termination — or, characteristically for this corpus, by the destruction of its enforcement apparatus (geo:ForcibleTermination)."
+      },
+      {
+        "id": "geo:Dependence",
+        "label": "Dependence",
+        "kind": "Class",
+        "subClassOf": "geo:DeonticEntity",
+        "gloss": "Reified n-ary state: dependent, provider, channel, horizon, provenance (Decision 7)."
+      },
+      {
+        "id": "geo:Leverage",
+        "label": "Leverage",
+        "kind": "Class",
+        "subClassOf": "geo:Disposition",
+        "gloss": "Disposition borne in virtue of positions and portfolios, with a half-life (§6.2). Blockade leverage decays fastest of any instrument family in the corpus."
+      },
+      {
+        "id": "geo:SubstitutionCapital",
+        "label": "Substitution capital",
+        "kind": "Class",
+        "subClassOf": "bfo:IndependentContinuant",
+        "gloss": "Target-side capital eroding leverage: hidden compartments, hidden bases, alternate routes."
+      },
+      {
+        "id": "geo:Effect",
+        "label": "Effect",
+        "kind": "Class",
+        "subClassOf": "bfo:Process",
+        "gloss": "Occurrent-or-state change attributable, with stated method, to measures or episodes."
+      },
+      {
+        "id": "geo:Objective",
+        "label": "Objective",
+        "kind": "Class",
+        "subClassOf": "geo:InformationArtifact",
+        "gloss": "Intentional aim annotated to acts, measures, or episodes; marked stated or inferred. In this corpus the gap between the two is the plot."
+      },
+      {
+        "id": "geo:Chokepoint",
+        "label": "Chokepoint",
+        "kind": "Class",
+        "subClassOf": "geo:Role",
+        "gloss": "Time-indexed role borne by hyperlane junctions, orbital approaches, sole-source facilities, and franchise gateways (Decision 6)."
+      },
+      {
+        "id": "geo:Connector",
+        "label": "Connector",
+        "kind": "Class",
+        "subClassOf": "geo:Role",
+        "gloss": "Third-party position through which flows reroute when a perimeter binds; Cloud City as type specimen — and cautionary tale."
+      },
+      {
+        "id": "geo:Strategy",
+        "label": "Strategy",
+        "kind": "Class",
+        "subClassOf": "geo:InformationArtifact",
+        "gloss": "Adopted plan linking objectives to instrument portfolios over horizons."
+      },
+      {
+        "id": "geo:Doctrine",
+        "label": "Doctrine",
+        "kind": "Class",
+        "subClassOf": "geo:InformationArtifact",
+        "gloss": "Standing body of principles about instrument use; the Tarkin doctrine is stated in a single sentence at a conference table."
+      },
+      {
+        "id": "geo:Posture",
+        "label": "Posture",
+        "kind": "Class",
+        "subClassOf": "geo:Disposition",
+        "gloss": "Disposition-like stance revealed by conduct; may diverge from published strategy. The Chancellery's posture diverged from its strategy for thirteen consecutive years."
+      }
+    ]
+  },
+  "modules": {
+    "ACT": {
+      "title": "Actors, Organs, and Roles",
+      "reference_section": "4",
+      "subsections": {
+        "4.1": {
+          "title": "Agents",
+          "classes": [
+            {
+              "id": "geo:Polity",
+              "label": "Polity",
+              "kind": "Class",
+              "subClassOf": "geo:Agent",
+              "gloss": "A sovereign or quasi-sovereign political order claiming jurisdiction over worlds, sectors, or routes."
+            },
+            {
+              "id": "geo:GalacticGovernment",
+              "label": "Galactic government",
+              "kind": "Class",
+              "subClassOf": "geo:Polity",
+              "gloss": "Galaxy-spanning polity: the Galactic Republic (to 19 BBY) and the Galactic Empire (after). One continuant under geo:sameAgentAs — 'reorganized into the first Galactic Empire' (Episode III)."
+            },
+            {
+              "id": "geo:MemberWorld",
+              "label": "Member world",
+              "kind": "Class",
+              "subClassOf": "geo:Polity",
+              "gloss": "Planetary polity holding Senate representation; Naboo and Alderaan as type specimens."
+            },
+            {
+              "id": "geo:SectorAuthority",
+              "label": "Sector authority",
+              "kind": "Class",
+              "subClassOf": "geo:Polity",
+              "gloss": "Regional governorship with direct control, announced at the dissolution of the Imperial Senate (Episode IV) — the constitutional moment when representation was traded for terror capacity."
+            },
+            {
+              "id": "geo:FringePolity",
+              "label": "Fringe polity",
+              "kind": "Class",
+              "subClassOf": "geo:Polity",
+              "gloss": "Polity beyond the jurisdiction boundary; Hutt space as canonical case ('The Republic doesn't exist out here', Episode I)."
+            },
+            {
+              "id": "geo:ParallelSociety",
+              "label": "Parallel society",
+              "kind": "Class",
+              "subClassOf": "geo:Polity",
+              "gloss": "Co-territorial polity with separate institutions and its own economy; the Gungan state on Naboo (Episode I). Its wartime alliance with the surface polity is the corpus's cleanest coalition-formation event."
+            },
+            {
+              "id": "geo:AutonomousOutpost",
+              "label": "Autonomous outpost",
+              "kind": "Class",
+              "subClassOf": "geo:Polity",
+              "gloss": "Small settlement trading on regulatory obscurity rather than recognition; Cloud City — outside the Mining Guild, beneath Imperial notice, until it wasn't (Episode V)."
+            },
+            {
+              "id": "geo:StateOrgan",
+              "label": "State organ",
+              "kind": "Class",
+              "subClassOf": "geo:Agent",
+              "gloss": "Constituted part of a polity through which measures are enacted and enforced."
+            },
+            {
+              "id": "geo:Senate",
+              "label": "Senate",
+              "kind": "Class",
+              "subClassOf": "geo:StateOrgan",
+              "gloss": "Galactic legislature. Its procedural paralysis during the Naboo crisis ('The Senate will vote on this...') is the corpus's canonical institutional-capacity failure; its dissolution (Episode IV) is the canonical norm-erosion event."
+            },
+            {
+              "id": "geo:Chancellery",
+              "label": "Chancellery",
+              "kind": "Class",
+              "subClassOf": "geo:StateOrgan",
+              "gloss": "Executive office of the Republic; accumulates emergency authority across Episodes II–III without a single sunset clause."
+            },
+            {
+              "id": "geo:Court",
+              "label": "Court",
+              "kind": "Class",
+              "subClassOf": "geo:StateOrgan",
+              "gloss": "Adjudicative organ. 'The courts take even longer' (Episode I) — Queen Amidala's assessment is the warrant for modeling adjudication lag as a strategic variable."
+            },
+            {
+              "id": "geo:CustomsAuthority",
+              "label": "Customs authority",
+              "kind": "Class",
+              "subClassOf": "geo:StateOrgan",
+              "gloss": "Boarding, inspection, and docking-control organs; Imperial interdiction of the Tantive IV (Episode IV) as the militarized limit case."
+            },
+            {
+              "id": "geo:Firm",
+              "label": "Firm",
+              "kind": "Class",
+              "subClassOf": "geo:Agent",
+              "gloss": "Non-state productive agent."
+            },
+            {
+              "id": "geo:TradeConglomerate",
+              "label": "Trade conglomerate",
+              "kind": "Class",
+              "subClassOf": "geo:Firm",
+              "gloss": "Vertically integrated carriage-and-retail combine with private enforcement capacity and — the constitutive oddity of the era — its own Senate seat; the Trade Federation."
+            },
+            {
+              "id": "geo:CommerceGuild",
+              "label": "Commerce guild",
+              "kind": "Class",
+              "subClassOf": "geo:Firm",
+              "gloss": "Sector-spanning commercial association; a named signatory to the Separatist pact (Episode II)."
+            },
+            {
+              "id": "geo:FinancialInstitution",
+              "label": "Financial institution",
+              "kind": "Class",
+              "subClassOf": "geo:Firm",
+              "gloss": "Deposit-taking, clearing, or lending agent."
+            },
+            {
+              "id": "geo:BankingClan",
+              "label": "Banking clan",
+              "kind": "Class",
+              "subClassOf": "geo:FinancialInstitution",
+              "gloss": "The InterGalactic Banking Clan: clearing infrastructure and war finance, signatory to the Separatist pact while remaining indispensable to the Republic (Episodes II–III). The corpus's demonstration that clearing rails outrank flags."
+            },
+            {
+              "id": "geo:TechnoUnion",
+              "label": "Techno union",
+              "kind": "Class",
+              "subClassOf": "geo:Firm",
+              "gloss": "Foundry-owning industrial combine; pledged its droid armies to the Separatist cause (Episode II)."
+            },
+            {
+              "id": "geo:CorporateAlliance",
+              "label": "Corporate alliance",
+              "kind": "Class",
+              "subClassOf": "geo:Firm",
+              "gloss": "Umbrella body of commercial interests among the Separatist signatories (Episodes II–III)."
+            },
+            {
+              "id": "geo:MiningGuild",
+              "label": "Mining guild",
+              "kind": "Class",
+              "subClassOf": "geo:Agent",
+              "gloss": "Standards-and-cartel body for extractive operations; Cloud City's non-membership (Episode V) is the canonical guild exemption and the price of it was invisibility."
+            },
+            {
+              "id": "geo:CloneProductionAuthority",
+              "label": "Clone production authority",
+              "kind": "Class",
+              "subClassOf": "geo:Firm",
+              "gloss": "Sole-source military biotech supplier; the Kaminoan cloning industry (Episode II). Decade lead times, no competing bidder, and a customer who did not know he had placed the order."
+            },
+            {
+              "id": "geo:CrimeSyndicate",
+              "label": "Crime syndicate",
+              "kind": "Class",
+              "subClassOf": "geo:Agent",
+              "gloss": "Hutt-model organization: protection arrangements, smuggling franchises, debt enforcement, bounty issuance, and a court of its own (Episode VI)."
+            },
+            {
+              "id": "geo:IllicitNetwork",
+              "label": "Illicit network",
+              "kind": "Class",
+              "subClassOf": "geo:Agent",
+              "gloss": "Smuggling and gray-carriage networks operating across the jurisdiction boundary; the freighter economy of Mos Eisley (Episode IV)."
+            },
+            {
+              "id": "geo:BountyHunter",
+              "label": "Bounty hunter",
+              "kind": "Class",
+              "subClassOf": "geo:Agent",
+              "gloss": "Independent enforcement contractor pricing and executing deontic claims; the Executor briefing (Episode V) shows a hegemon outsourcing enforcement to this class without embarrassment."
+            },
+            {
+              "id": "geo:MonasticOrder",
+              "label": "Monastic order",
+              "kind": "Class",
+              "subClassOf": "geo:Agent",
+              "gloss": "The Jedi and Sith orders. Economically relevant as unpriced enforcement capacity ('keepers of the peace, not soldiers', Episode II) and as covert patron respectively."
+            },
+            {
+              "id": "geo:Household",
+              "label": "Household",
+              "kind": "Class",
+              "subClassOf": "geo:Agent",
+              "gloss": "Smallholder production unit; the Lars moisture farm (Episodes II, IV). The corpus's only glimpse of the agrarian base underneath the galactic superstructure."
+            },
+            {
+              "id": "geo:SalvageClan",
+              "label": "Salvage clan",
+              "kind": "Class",
+              "subClassOf": "geo:Firm",
+              "gloss": "Itinerant scrap-and-droid traders; Jawa sandcrawler operations (Episode IV). The secondary droid market is the fringe economy's most liquid asset class."
+            },
+            {
+              "id": "geo:Population",
+              "label": "Population",
+              "kind": "Class",
+              "subClassOf": "bfo:IndependentContinuant",
+              "gloss": "Reified population as bearer of humanitarian and incidence effects; 'the death toll is catastrophic' (Episode I) is an incidence statement about this class, not about a treasury."
+            },
+            {
+              "id": "geo:operates",
+              "label": "Operates",
+              "kind": "Property",
+              "gloss": "Relates an agent to the infrastructure or process it operates: Cloud City operates its platform; the Federation operates its blockade fleet."
+            }
+          ]
+        },
+        "4.2": {
+          "title": "Identity criteria and identifiers",
+          "classes": [
+            {
+              "id": "geo:sameAgentAs",
+              "label": "Same agent as",
+              "kind": "Property",
+              "gloss": "Identity equivalence across renames and constitutional transformation. The Republic and the Empire are one continuant polity under this relation; the ontology declines to let a declaration launder a balance sheet."
+            }
+          ]
+        },
+        "4.3": {
+          "title": "Episode roles",
+          "classes": [
+            {
+              "id": "geo:SenderRole",
+              "label": "Sender role",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Role borne by the coercing agent(s) within an episode; the Trade Federation at Naboo, the Empire at Bespin."
+            },
+            {
+              "id": "geo:TargetRole",
+              "label": "Target role",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Role borne by the coerced agent within an episode."
+            },
+            {
+              "id": "geo:BystanderRole",
+              "label": "Bystander role",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Role borne by an uninvolved third party; most of the galaxy, most of the time — which is what the Tarkin doctrine counts on."
+            },
+            {
+              "id": "geo:ConnectorRole",
+              "label": "Connector role",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Non-member of the sending perimeter through which flows reroute; Cloud City for gas and refugees, smugglers for cargo."
+            },
+            {
+              "id": "geo:EnforcerRole",
+              "label": "Enforcer role",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Role borne by an agent enforcing a measure: garrison, boarding party, or contracted bounty hunter."
+            },
+            {
+              "id": "geo:PatronRole",
+              "label": "Patron role",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Covert principal financing or steering visible agents; Darth Sidious relative to the Trade Federation (Episode I) and the Separatist coalition (Episodes II–III). Carries publicity = deniable by default; see axiom A12."
+            },
+            {
+              "id": "geo:ProxyRole",
+              "label": "Proxy role",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Visible agent acting under covert patronage with deniability; the Trade Federation at Naboo bears this role concurrently with SenderRole."
+            },
+            {
+              "id": "geo:HegemonRole",
+              "label": "Hegemon role",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Role borne by an agent whose enforcement reach spans hyperlane, financial, and political layers simultaneously; the Empire at Bespin (Episode V) — able to alter a deal because no layer offers the counterparty an exit."
+            }
+          ]
+        },
+        "4.4": {
+          "title": "Capacities",
+          "classes": [
+            {
+              "id": "geo:InstitutionalCapacity",
+              "label": "Institutional capacity",
+              "kind": "Class",
+              "subClassOf": "geo:Disposition",
+              "gloss": "Decomposable disposition to design, enact, enforce, and sustain measures. The Naboo crisis shows the enforcement component can be null while the deliberative component grinds on — the decomposition is the analysis."
+            },
+            {
+              "id": "geo:TerrorCapacity",
+              "label": "Terror capacity",
+              "kind": "Class",
+              "subClassOf": "geo:Disposition",
+              "gloss": "Capacity to secure compliance through demonstrated willingness to destroy, explicitly proposed as a substitute for institutional capacity: 'Fear will keep the local systems in line' (Episode IV). Episode VI answers the question whether the substitution ever nets out."
+            }
+          ]
+        }
+      }
+    },
+    "NET": {
+      "title": "Networks, Flows, and Positions",
+      "reference_section": "5",
+      "subsections": {
+        "5.1": {
+          "title": "Structures",
+          "classes": [
+            {
+              "id": "geo:NetworkLayer",
+              "label": "Network layer",
+              "kind": "Class",
+              "subClassOf": "geo:NetworkStructure",
+              "gloss": "One stratum of the galactic economy: hyperlane carriage, interbank clearing, political representation, information."
+            },
+            {
+              "id": "geo:Node",
+              "label": "Node",
+              "kind": "Class",
+              "subClassOf": "geo:NetworkStructure",
+              "gloss": "A junction, facility, or market in a network layer."
+            },
+            {
+              "id": "geo:Edge",
+              "label": "Edge",
+              "kind": "Class",
+              "subClassOf": "geo:NetworkStructure",
+              "gloss": "A connection over which flows move."
+            },
+            {
+              "id": "geo:Flow",
+              "label": "Flow",
+              "kind": "Class",
+              "subClassOf": "geo:EconomicProcess",
+              "gloss": "Dated movement over an edge: cargo, credits, refugees, information."
+            },
+            {
+              "id": "geo:HyperlaneRoute",
+              "label": "Hyperlane route",
+              "kind": "Class",
+              "subClassOf": "geo:Edge",
+              "gloss": "Edge in the galactic logistics layer. 'The taxation of trade routes to outlying star systems is in dispute' (Episode I, opening crawl) — the whole saga opens with a claim over this class."
+            },
+            {
+              "id": "geo:Spaceport",
+              "label": "Spaceport",
+              "kind": "Class",
+              "subClassOf": "geo:Node",
+              "gloss": "Cargo and passenger interchange node. Mos Eisley (Episode IV) as type specimen: a node whose low formality lowers recording probability and docking-fee compliance alike."
+            },
+            {
+              "id": "geo:OrbitalApproach",
+              "label": "Orbital approach",
+              "kind": "Class",
+              "subClassOf": "geo:Edge",
+              "gloss": "The blockade-relevant edge segment around a world; Naboo, 32 BBY."
+            },
+            {
+              "id": "geo:GasMiningPlatform",
+              "label": "Gas mining platform",
+              "kind": "Class",
+              "subClassOf": "geo:Node",
+              "gloss": "Atmospheric extraction node; the tibanna gas operation at Cloud City (Episode V)."
+            },
+            {
+              "id": "geo:DroidFoundry",
+              "label": "Droid foundry",
+              "kind": "Class",
+              "subClassOf": "geo:Node",
+              "gloss": "Automated manufacturing node; the Geonosis foundries (Episode II)."
+            },
+            {
+              "id": "geo:CloningFacility",
+              "label": "Cloning facility",
+              "kind": "Class",
+              "subClassOf": "geo:Node",
+              "gloss": "Military biotech production node; Tipoca City, Kamino (Episode II)."
+            },
+            {
+              "id": "geo:MoistureFarm",
+              "label": "Moisture farm",
+              "kind": "Class",
+              "subClassOf": "geo:Node",
+              "gloss": "Smallholder hydrological extraction node on arid worlds (Episodes II, IV)."
+            },
+            {
+              "id": "geo:Megaproject",
+              "label": "Megaproject",
+              "kind": "Class",
+              "subClassOf": "geo:Node",
+              "gloss": "Capital concentration large enough to distort the sender's own fiscal posture; both Death Stars. The corpus never shows the appropriations process, which is itself a finding about recording probability."
+            }
+          ]
+        },
+        "5.2": {
+          "title": "Positions and centrality",
+          "classes": [
+            {
+              "id": "geo:NetworkPosition",
+              "label": "Network position",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Position an agent or facility holds within a network layer."
+            },
+            {
+              "id": "geo:HubPosition",
+              "label": "Hub position",
+              "kind": "Class",
+              "subClassOf": "geo:NetworkPosition",
+              "gloss": "Network position with hub-like centrality; Coruscant in the political layer, the Banking Clan in clearing."
+            }
+          ]
+        },
+        "5.3": {
+          "title": "Chokepoints, properly",
+          "classes": [
+            {
+              "id": "geo:ChokepointPosition",
+              "label": "Chokepoint position",
+              "kind": "Class",
+              "subClassOf": "geo:NetworkPosition",
+              "gloss": "Time-indexed role-position: an orbital approach under blockade, a sole-source cloning facility, a franchise gateway. Its mirror is geo:EvasionInfrastructure."
+            },
+            {
+              "id": "geo:BottleneckStage",
+              "label": "Bottleneck stage",
+              "kind": "Class",
+              "subClassOf": "geo:Role",
+              "gloss": "Stage where the chokepoint bites: tibanna gas binds at extraction, spice at carriage, clones at the decade-long production lead time."
+            },
+            {
+              "id": "geo:JurisdictionClaim",
+              "label": "Jurisdiction claim",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "Reified basis for legal reach. 'Our blockade is perfectly legal' (Episode I): a jurisdiction claim asserted by the sender, contested by the target, and adjudicated by nobody in time to matter."
+            },
+            {
+              "id": "geo:hasHalfLife",
+              "label": "Has half life",
+              "kind": "Property",
+              "gloss": "Half-life of a leverage disposition. Blockade leverage at Naboo began leaking within days."
+            }
+          ]
+        },
+        "5.4": {
+          "title": "Connector positions",
+          "classes": [
+            {
+              "id": "geo:ConnectorPosition",
+              "label": "Connector position",
+              "kind": "Class",
+              "subClassOf": "geo:NetworkPosition",
+              "gloss": "Position outside guild and Imperial perimeters through which gas, cargo, and refugees route; Cloud City held one until the perimeter arrived with a garrison (Episode V)."
+            }
+          ]
+        },
+        "5.5": {
+          "title": "Exposure",
+          "summary": "Horizon-indexed exposure states linking dependence to leverage. Cloud City states its own exposure on screen: 'This facility is small enough not to be noticed... we're not very self-sufficient' (Episode V)."
+        }
+      }
+    },
+    "POW": {
+      "title": "Power, Dependence, and Leverage as Dispositions",
+      "reference_section": "6",
+      "subsections": {
+        "6.1": {
+          "title": "Dependence",
+          "classes": [
+            {
+              "id": "geo:Dependence",
+              "label": "Dependence",
+              "kind": "Class",
+              "gloss": "Reified n-ary state."
+            },
+            {
+              "id": "geo:SensitivityDependence",
+              "label": "Sensitivity dependence",
+              "kind": "Class",
+              "subClassOf": "geo:Dependence",
+              "gloss": "Short-run responsiveness: Naboo's food and supply exposure within days of blockade ('the death toll is catastrophic')."
+            },
+            {
+              "id": "geo:VulnerabilityDependence",
+              "label": "Vulnerability dependence",
+              "kind": "Class",
+              "subClassOf": "geo:Dependence",
+              "gloss": "Long-run adjustment cost: Cloud City's inability to relocate or self-supply; the Republic's inability to field an army without Kamino."
+            },
+            {
+              "id": "geo:AsymmetricInterdependence",
+              "label": "Asymmetric interdependence",
+              "kind": "Class",
+              "subClassOf": "geo:Dependence",
+              "gloss": "Two-sided structure whose asymmetries generate leverage. The Federation needed Naboo's signature; Naboo needed everything else."
+            },
+            {
+              "id": "geo:DebtState",
+              "label": "Debt state",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "Reified debt: debtor, creditor, magnitude, enforcement channel, collateral. The Solo–Jabba debt (Episodes IV–VI) is the corpus's best-documented instance, up to and including the collateral hanging on the palace wall."
+            }
+          ]
+        },
+        "6.2": {
+          "title": "Leverage and its decay",
+          "classes": [
+            {
+              "id": "geo:Leverage",
+              "label": "Leverage",
+              "kind": "Class"
+            },
+            {
+              "id": "geo:Resilience",
+              "label": "Resilience",
+              "kind": "Class",
+              "subClassOf": "geo:Disposition",
+              "gloss": "Target-side disposition to absorb coercive shocks; the Rebellion's dispersed, mobile basing as standing resilience investment."
+            },
+            {
+              "id": "geo:depreciationChannels",
+              "label": "Depreciation channels",
+              "kind": "Property",
+              "gloss": "Which adaptation mechanism erodes this leverage: rerouting, substitution, evasion infrastructure, or the destruction of the enforcing fleet."
+            },
+            {
+              "id": "geo:scope",
+              "label": "Scope",
+              "kind": "Property",
+              "gloss": "Instrument or portfolio-level scope of a leverage claim."
+            }
+          ]
+        },
+        "6.3": {
+          "title": "The two capacities, and structural power",
+          "classes": [
+            {
+              "id": "geo:StructuralPower",
+              "label": "Structural power",
+              "kind": "Class",
+              "subClassOf": "geo:Disposition",
+              "gloss": "Power over rules and architecture, not merely over flows. The Chancellery's accumulation of emergency authority is structural power's canonical accretion path: each grant voted, none reversed."
+            },
+            {
+              "id": "geo:SurveillanceCapacity",
+              "label": "Surveillance capacity",
+              "kind": "Class",
+              "subClassOf": "geo:Disposition",
+              "gloss": "Sender-side capacity to observe: probe droids across a thousand systems (Episode V), scan crews at the boarding point (Episode IV)."
+            },
+            {
+              "id": "geo:InterdictionCapacity",
+              "label": "Interdiction capacity",
+              "kind": "Class",
+              "subClassOf": "geo:Disposition",
+              "gloss": "Sender-side capacity to stop flows: blockade fleets, tractor beams, garrisons."
+            },
+            {
+              "id": "geo:Credibility",
+              "label": "Credibility",
+              "kind": "Class",
+              "subClassOf": "geo:Quality",
+              "gloss": "Assessment attribute borne by threats and standing measures. Tarkin's demonstration problem: a battle station deters only if the willingness to fire it is common knowledge — hence Alderaan, and hence the doctrine's self-undermining (axiom A11)."
+            }
+          ]
+        },
+        "6.4": {
+          "title": "The separation principle",
+          "summary": "Dependence, leverage, and realized coercion are never identified with one another. Every leverage claim requires a horizon index and stated model provenance; the Federation held blockade leverage at h = days and none at h = months, a distinction it discovered empirically."
+        }
+      }
+    },
+    "INS": {
+      "title": "Instruments, Actions, and Measures in Force",
+      "reference_section": "7",
+      "three_way_split": {
+        "reference_section": "7.1",
+        "instrument_type": {
+          "class": "geo:InstrumentType",
+          "gloss": "Type-level tool (Instrument in the spine)."
+        },
+        "instrument_action": {
+          "class": "geo:InstrumentAction",
+          "subtypes": [
+            {
+              "id": "geo:Imposition",
+              "label": "Imposition",
+              "kind": "Class",
+              "subClassOf": "geo:InstrumentAction",
+              "gloss": "Dated act bringing a measure into force; the blockade's establishment, the garrison's landing."
+            },
+            {
+              "id": "geo:Amendment",
+              "label": "Amendment",
+              "kind": "Class",
+              "subClassOf": "geo:InstrumentAction",
+              "gloss": "Modification of a standing measure or bargain."
+            },
+            {
+              "id": "geo:DealAlteration",
+              "label": "Deal alteration",
+              "kind": "Class",
+              "subClassOf": "geo:Amendment",
+              "gloss": "Unilateral amendment of a standing bargain under coercive asymmetry: 'I am altering the deal. Pray I don't alter it any further' (Episode V). Requires the altering agent to bear HegemonRole over the counterparty (axiom A6)."
+            },
+            {
+              "id": "geo:Suspension",
+              "label": "Suspension",
+              "kind": "Class",
+              "subClassOf": "geo:InstrumentAction",
+              "gloss": "Dated act pausing a measure without dissolving it."
+            },
+            {
+              "id": "geo:Termination",
+              "label": "Termination",
+              "kind": "Class",
+              "subClassOf": "geo:InstrumentAction",
+              "gloss": "Dated act dissolving a measure by the sender's own decision; contrast geo:ForcibleTermination."
+            },
+            {
+              "id": "geo:EnforcementAction",
+              "label": "Enforcement action",
+              "kind": "Class",
+              "subClassOf": "geo:InstrumentAction",
+              "gloss": "Enforcement act against a specific target under a standing measure: a boarding, a carbonite freezing, a sail-barge execution party."
+            },
+            {
+              "id": "geo:LicensingDecision",
+              "label": "Licensing decision",
+              "kind": "Class",
+              "subClassOf": "geo:InstrumentAction",
+              "gloss": "Permit or denial modulating a measure without amending it: docking clearance, landing rights on Bespin — granted, then weaponized."
+            }
+          ],
+          "properties": [
+            {
+              "id": "geo:createdBy",
+              "label": "Created by",
+              "kind": "Property"
+            },
+            {
+              "id": "geo:modifiedBy",
+              "label": "Modified by",
+              "kind": "Property"
+            },
+            {
+              "id": "geo:endedBy",
+              "label": "Ended by",
+              "kind": "Property"
+            },
+            {
+              "id": "geo:imposedBy",
+              "label": "Imposed by",
+              "kind": "Property"
+            },
+            {
+              "id": "geo:penaltyMagnitude",
+              "label": "Penalty magnitude",
+              "kind": "Property",
+              "gloss": "Priced where possible; 'a substantial reward' and 'no disintegrations' jointly bound one instance."
+            }
+          ]
+        },
+        "measure_in_force": {
+          "class": "geo:MeasureInForce"
+        }
+      },
+      "characteristics_vector": {
+        "reference_section": "7.2",
+        "attributes": [
+          {
+            "id": "geo:selfCostRate",
+            "symbol": "a",
+            "content": "Sender-side cost flow",
+            "load_bearing_use": "Blockades forgo the blockader's own franchise revenue; megaprojects distort the sender's fiscal posture for decades"
+          },
+          {
+            "id": "geo:targetCostRate",
+            "symbol": "b",
+            "content": "Target-side cost flow",
+            "load_bearing_use": "Incidence ratio b/a; at Naboo, b fell on the population while a fell on shareholders"
+          },
+          {
+            "id": "geo:deploymentLag",
+            "symbol": "ℓ",
+            "content": "Time from decision to bite",
+            "load_bearing_use": "Clone procurement: ten years. Death Star II: 'This station will be operational as planned' — schedule pressure as governance (Episode VI)"
+          },
+          {
+            "id": "geo:reversibility",
+            "symbol": "r",
+            "content": "Cost/feasibility of withdrawal",
+            "load_bearing_use": "PlanetaryDestruction has r = 0, the vector's floor; blockades are cheap to lift, which is why their threats are cheap to disbelieve"
+          },
+          {
+            "id": "geo:adaptationCoupling",
+            "symbol": "κ",
+            "content": "How strongly imposition accelerates target substitution",
+            "load_bearing_use": "The Naboo blockade produced its own leak within days; every garrison recruits for the Rebellion"
+          },
+          {
+            "id": "geo:granularity",
+            "content": "Dial vs. switch",
+            "load_bearing_use": "Route taxation is a dial; a blockade is a switch; Alderaan is a switch that cannot be unswitched"
+          },
+          {
+            "id": "geo:formality",
+            "content": "Formal/legal vs. informal/deniable",
+            "load_bearing_use": "Imperial decree vs. Sith patronage; recording probability tracks formality (axiom A10)"
+          },
+          {
+            "id": "geo:polarity",
+            "content": "Negative, positive, or retention",
+            "load_bearing_use": "The full menu: blockade (negative), war loan (positive), garrisoned gas output held for the Empire (retention)"
+          },
+          {
+            "id": "geo:targetingResolution",
+            "content": "World / sector / entity / individual / cargo / transaction",
+            "load_bearing_use": "From sector-wide route taxes down to a bounty on one freighter"
+          },
+          {
+            "id": "geo:extraterritorialScope",
+            "content": "Whether the measure reaches conduct beyond the jurisdiction boundary",
+            "load_bearing_use": "Imperial bounties are serviced inside Hutt space by contractors the Empire does not acknowledge"
+          }
+        ]
+      },
+      "polarity_values": [
+        {
+          "value": "negative",
+          "gloss": "Punishment / coercion: blockade, garrison, bounty."
+        },
+        {
+          "value": "positive",
+          "gloss": "Inducement: war loans, franchise grants, landing rights."
+        },
+        {
+          "value": "retention",
+          "gloss": "Home-facing withholding: garrisoned output held for the sender's own use (Bespin under occupation)."
+        }
+      ],
+      "families": {
+        "GINS-1": {
+          "title": "Trade and route measures",
+          "classes": [
+            {
+              "id": "geo:Blockade",
+              "label": "Blockade",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Encirclement of an orbital approach interdicting all flows; the Trade Federation at Naboo (Episode I) as type specimen, complete with an asserted legality claim and a catastrophic incidence profile."
+            },
+            {
+              "id": "geo:RouteTaxation",
+              "label": "Route taxation",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Taxation of hyperlane commerce; the disputed measure that opens the entire corpus (Episode I, opening crawl)."
+            },
+            {
+              "id": "geo:DockingFee",
+              "label": "Docking fee",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Node-level access charge; compliance at low-formality spaceports approaches zero."
+            },
+            {
+              "id": "geo:CargoInterdiction",
+              "label": "Cargo interdiction",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Boarding and search of vessels in transit; the Tantive IV seizure (Episode IV) as the militarized limit — 'If this is a consular ship, where is the ambassador?'"
+            },
+            {
+              "id": "geo:TradeEmbargo",
+              "label": "Trade embargo",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Standing prohibition on commerce with a target world or sector."
+            },
+            {
+              "id": "geo:FranchiseMonopoly",
+              "label": "Franchise monopoly",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Exclusive carriage or retail rights over a route or sector; the Trade Federation's franchise, held jointly with a Senate seat — the era's constitutive conflict of interest."
+            }
+          ]
+        },
+        "GINS-2": {
+          "title": "Financial and debt measures",
+          "classes": [
+            {
+              "id": "geo:WarLoan",
+              "label": "War loan",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Conflict finance; the Banking Clan's signature product, extended to both sides of the same war (Episodes II–III)."
+            },
+            {
+              "id": "geo:ClearingExclusion",
+              "label": "Clearing exclusion",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Exclusion from interbank clearing rails; the threat that keeps member worlds politely disagreeing with the Banking Clan."
+            },
+            {
+              "id": "geo:AssetSeizure",
+              "label": "Asset seizure",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Confiscation of vessels, cargo, or facilities; the Falcon under the tractor beam is a seizure the ledger never records."
+            },
+            {
+              "id": "geo:DebtCall",
+              "label": "Debt call",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Acceleration of an obligation with escalating enforcement; Jabba's terms on the Solo debt harden from surcharge (Episode IV) to bounty to wall ornament (Episodes V–VI)."
+            },
+            {
+              "id": "geo:BountyIssuance",
+              "label": "Bounty issuance",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Priced, transferable enforcement order on a person or asset; issued by syndicates and hegemons alike ('There will be a substantial reward for the one who finds the Millennium Falcon', Episode V)."
+            },
+            {
+              "id": "geo:CurrencyRefusal",
+              "label": "Currency refusal",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Non-acceptance of a polity's money at the jurisdiction boundary: 'Republic credits are no good out here. I need something more real' (Episode I). The corpus's cleanest measurement of where sovereignty actually ends."
+            }
+          ]
+        },
+        "GINS-3": {
+          "title": "Contract and franchise instruments",
+          "classes": [
+            {
+              "id": "geo:FranchiseCharter",
+              "label": "Franchise charter",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Standing grant of commercial rights conditioned on conduct."
+            },
+            {
+              "id": "geo:HostageCollateral",
+              "label": "Hostage collateral",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Holding a person as security for performance; Solo in carbonite, transferred from Imperial custody to a syndicate wall as trophy-collateral (Episodes V–VI). The instrument's liquidity is demonstrated by the transfer."
+            },
+            {
+              "id": "geo:WagerTransfer",
+              "label": "Wager transfer",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Transfer of title by bet; ownership of a person and the parts for a podracer decided in a single afternoon's gambling (Episode I). Fringe-legal, Republic-invisible."
+            },
+            {
+              "id": "geo:ProtectionArrangement",
+              "label": "Protection arrangement",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Standing payment-for-nonaggression; the Hutt-space staple underneath every visible transaction."
+            }
+          ]
+        },
+        "GINS-4": {
+          "title": "Procurement and industrial measures",
+          "classes": [
+            {
+              "id": "geo:MilitaryProcurement",
+              "label": "Military procurement",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "State purchase of military capacity. The clone army: sole-source, decade lead time, commissioned c. 32 BBY without Senate appropriation and discovered by its own customer (Episode II) — the canonical off-books procurement."
+            },
+            {
+              "id": "geo:DroidArmyProcurement",
+              "label": "Droid army procurement",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Private military capitalization by commercial combines; the Federation, Techno Union, and allies pledging armies like inventory (Episode II)."
+            },
+            {
+              "id": "geo:MegaprojectAppropriation",
+              "label": "Megaproject appropriation",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Continuous-appropriation capital project; both Death Stars. Governance mode attested on screen: schedule review by personal enforcement rather than budget committee (Episode VI)."
+            },
+            {
+              "id": "geo:Nationalization",
+              "label": "Nationalization",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Absorption of private productive capacity into the state; the fate of the Separatist industrial base after 19 BBY, sealed in a conference room on Mustafar (Episode III)."
+            }
+          ]
+        },
+        "GINS-5": {
+          "title": "Coercive-demonstration measures",
+          "classes": [
+            {
+              "id": "geo:PlanetaryDestruction",
+              "label": "Planetary destruction",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Annihilation of an inhabited world as demonstration; Alderaan (Episode IV). Reversibility zero, signal maximal, norm erosion catastrophic, rally effect decisive — the characteristics vector's limit point and the doctrine's refutation (axiom A11)."
+            },
+            {
+              "id": "geo:GarrisonEmplacement",
+              "label": "Garrison emplacement",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Standing military presence converting a connector position into a compliance node; Cloud City (Episode V). The measure that ends the connector rent it came to tax."
+            },
+            {
+              "id": "geo:PunitiveExample",
+              "label": "Punitive example",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Public punishment staged to move third-party expectations; the carbonite freezing was a product test, an enforcement act, and a broadcast, in that order."
+            }
+          ]
+        },
+        "GINS-6": {
+          "title": "Labor measures",
+          "classes": [
+            {
+              "id": "geo:Enslavement",
+              "label": "Enslavement",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Chattel ownership of persons: legal in Hutt space, invisible to Republic enforcement, and load-bearing for the fringe economy (Episode I). The ontology records it as an instrument because the corpus shows it priced, transferred, and wagered."
+            },
+            {
+              "id": "geo:IndentureContract",
+              "label": "Indenture contract",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Bonded labor with a notional exit price; the gradient between it and enslavement is thin on Tatooine."
+            },
+            {
+              "id": "geo:ManufacturedLabor",
+              "label": "Manufactured labor",
+              "kind": "Class",
+              "subClassOf": "geo:Instrument",
+              "gloss": "Production of persons as military-labor input; Kamino (Episode II). The ontology flags, and does not resolve, the moral-status question — but it prices the procurement, because the corpus does."
+            }
+          ]
+        }
+      },
+      "adjacent_instruments": {
+        "reference_section": "7.5",
+        "classes": [
+          {
+            "id": "geo:CovertPatronage",
+            "label": "Covert patronage",
+            "kind": "Class",
+            "subClassOf": "geo:Instrument",
+            "gloss": "Deniable principal financing or steering agents on both sides of a conflict; the Sith orchestration of the Clone Wars is strategic corruption's limit case (axiom A12)."
+          },
+          {
+            "id": "geo:InfrastructureSabotage",
+            "label": "Infrastructure sabotage",
+            "kind": "Class",
+            "subClassOf": "geo:Instrument",
+            "gloss": "Destruction of enabling infrastructure; the Endor shield-generator raid (Episode VI). Boundary-flagged as military rather than economic statecraft."
+          },
+          {
+            "id": "geo:AssassinationContract",
+            "label": "Assassination contract",
+            "kind": "Class",
+            "subClassOf": "geo:Instrument",
+            "gloss": "Priced elimination of a political principal; contracted against Senator Amidala during the Military Creation Act debate (Episode II). Boundary-flagged; included because the corpus prices it."
+          }
+        ]
+      }
+    },
+    "EPI": {
+      "title": "Episodes, Events, and the Observation Layer",
+      "reference_section": "8",
+      "subsections": {
+        "8.1": {
+          "title": "Communicative acts",
+          "classes": [
+            {
+              "id": "geo:CommunicativeAct",
+              "label": "Communicative act",
+              "kind": "Class",
+              "subClassOf": "geo:Act",
+              "gloss": "Umbrella class for speech acts in coercive interaction; the ontology gives speech its own occurrents rather than smuggling it into 'measures'. Half of Episode V's coercion is conducted in dialogue over a dinner table."
+            },
+            {
+              "id": "geo:Demand",
+              "label": "Demand",
+              "kind": "Class",
+              "subClassOf": "geo:CommunicativeAct",
+              "gloss": "A communicated requirement with content: sign the treaty; reveal the base; deliver Skywalker."
+            },
+            {
+              "id": "geo:Threat",
+              "label": "Threat",
+              "kind": "Class",
+              "subClassOf": "geo:CommunicativeAct",
+              "gloss": "A conditional commitment to impose: 'Pray I don't alter it any further' (Episode V)."
+            },
+            {
+              "id": "geo:Assurance",
+              "label": "Assurance",
+              "kind": "Class",
+              "subClassOf": "geo:CommunicativeAct",
+              "gloss": "A conditional commitment NOT to impose upon compliance: 'The Empire will leave you to run this facility as you see fit' (Episode V) — voided scene by scene, which is why assurances carry Credibility as an attribute."
+            },
+            {
+              "id": "geo:Concession",
+              "label": "Concession",
+              "kind": "Class",
+              "subClassOf": "geo:CommunicativeAct",
+              "gloss": "A target's compliance act; Lando's initial cooperation at Bespin."
+            },
+            {
+              "id": "geo:Defiance",
+              "label": "Defiance",
+              "kind": "Class",
+              "subClassOf": "geo:CommunicativeAct",
+              "gloss": "A target's refusal act under threat; 'I will sign no treaty' (Episode I), and Leia's refusal under planetary threat (Episode IV)."
+            },
+            {
+              "id": "geo:BackDown",
+              "label": "Back down",
+              "kind": "Class",
+              "subClassOf": "geo:CommunicativeAct",
+              "gloss": "A sender's withdrawal or de-escalation act; rare in this corpus, which is itself a finding about its senders."
+            },
+            {
+              "id": "geo:publicity",
+              "label": "Publicity",
+              "kind": "Property",
+              "gloss": "Public, private, or deniable. Sith patronage runs the deniable channel end to end."
+            }
+          ]
+        },
+        "8.2": {
+          "title": "The episode and its stage machine",
+          "stage_machine": {
+            "root": "geo:AtRiskDispute",
+            "branches": {
+              "geo:QuietResolution": "No threat voiced; near-zero recording. The fringe settles most disputes here — or in the other unrecorded way.",
+              "geo:ThreatStage": {
+                "geo:ConcessionOutcome": "Threat succeeds; low recording.",
+                "geo:DefianceStage": {
+                  "geo:SenderBackDown": "Sender withdraws before imposition.",
+                  "geo:ImpositionStage": {
+                    "geo:AdaptationAndBargainingPhase": {
+                      "geo:TerminationEvent": "Carries geo:terminationPathway; in this corpus, most often ForcibleTermination."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "classes": [
+            {
+              "id": "geo:CoercionEpisode",
+              "label": "Coercion episode",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "Occurrent aggregating the acts, measures, processes, and effects of one influence attempt: the Naboo blockade, the Bespin capture, the Alderaan demonstration."
+            },
+            {
+              "id": "geo:AtRiskDispute",
+              "label": "At risk dispute",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "The at-risk universe: disputes that could escalate. The route-taxation dispute is the corpus's root instance; everything else is downstream of it and a Sith career plan."
+            },
+            {
+              "id": "geo:QuietResolution",
+              "label": "Quiet resolution",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "Dispute resolves before any threat is voiced; near-zero recording probability."
+            },
+            {
+              "id": "geo:ThreatStage",
+              "label": "Threat stage",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "A threat has been communicated; the target has not yet responded."
+            },
+            {
+              "id": "geo:ConcessionOutcome",
+              "label": "Concession outcome",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "The threat succeeds without imposition; low recording — the archive over-represents defiance."
+            },
+            {
+              "id": "geo:DefianceStage",
+              "label": "Defiance stage",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "The target refuses; 'I will sign no treaty' moves the Naboo episode here."
+            },
+            {
+              "id": "geo:SenderBackDown",
+              "label": "Sender back down",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "Sender withdraws before imposition; unattested for this corpus's major senders."
+            },
+            {
+              "id": "geo:ImpositionStage",
+              "label": "Imposition stage",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "The measure is in force: blockade running, occupation, garrison."
+            },
+            {
+              "id": "geo:AdaptationAndBargainingPhase",
+              "label": "Adaptation and bargaining phase",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "Target adapts while both sides bargain; where leverage half-lives are measured."
+            },
+            {
+              "id": "geo:TerminationEvent",
+              "label": "Termination event",
+              "kind": "Class",
+              "subClassOf": "geo:Act",
+              "gloss": "Carries a terminationPathway."
+            },
+            {
+              "id": "geo:Campaign",
+              "label": "Campaign",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "A sequence of episodes serving a strategic aim; the Clone Wars as a campaign whose orchestrator held PatronRole on both sides."
+            },
+            {
+              "id": "geo:terminationPathway",
+              "label": "Termination pathway",
+              "kind": "Property",
+              "gloss": "Open enumeration; ForcibleTermination added for this corpus and doing most of the work."
+            }
+          ],
+          "termination_pathway_values": [
+            {
+              "value": "TargetCompliance",
+              "gloss": "Lando's initial cooperation at Bespin — compliance, then defection."
+            },
+            {
+              "value": "NegotiatedSettlement",
+              "gloss": "Sought by the Federation via coerced treaty signature; never obtained."
+            },
+            {
+              "value": "SenderCapitulation",
+              "gloss": "Sender ends measures without target compliance; unattested in this corpus."
+            },
+            {
+              "value": "Obsolescence",
+              "gloss": "The measure's object disappears; route taxation after the Republic itself dissolved."
+            },
+            {
+              "value": "ForcibleTermination",
+              "gloss": "Termination by destruction of the sender's enforcement apparatus: the Battle of Naboo ends the blockade; Yavin ends the Alderaan campaign; Endor ends the doctrine."
+            },
+            {
+              "value": "Sunset",
+              "gloss": "Statutory or truce-embedded expiry; the Chancellery's emergency powers were nominally of this kind ('I will lay down the powers you have given me', Episode II). Nominally."
+            }
+          ]
+        },
+        "8.3": {
+          "title": "Economic processes",
+          "classes": [
+            {
+              "id": "geo:TradeFlow",
+              "label": "Trade flow",
+              "kind": "Class",
+              "subClassOf": "geo:Flow",
+              "gloss": "Dated movement of goods over a hyperlane edge."
+            },
+            {
+              "id": "geo:FinancialFlow",
+              "label": "Financial flow",
+              "kind": "Class",
+              "subClassOf": "geo:Flow",
+              "gloss": "Dated movement of credits or claims over the clearing layer."
+            },
+            {
+              "id": "geo:RefugeeFlow",
+              "label": "Refugee flow",
+              "kind": "Class",
+              "subClassOf": "geo:Flow",
+              "gloss": "Population movement under coercion; the evacuation of Cloud City (Episode V)."
+            },
+            {
+              "id": "geo:AdaptationProcess",
+              "label": "Adaptation process",
+              "kind": "Class",
+              "subClassOf": "geo:EconomicProcess",
+              "gloss": "Target-side response eroding a measure's bite."
+            },
+            {
+              "id": "geo:Stockpiling",
+              "label": "Stockpiling",
+              "kind": "Class",
+              "subClassOf": "geo:AdaptationProcess",
+              "gloss": "Accumulation ahead of an anticipated cutoff."
+            },
+            {
+              "id": "geo:Rerouting",
+              "label": "Rerouting",
+              "kind": "Class",
+              "subClassOf": "geo:AdaptationProcess",
+              "gloss": "Shifting flows to alternate edges or connectors when a measure binds."
+            },
+            {
+              "id": "geo:BlockadeRunning",
+              "label": "Blockade running",
+              "kind": "Class",
+              "subClassOf": "geo:AdaptationProcess",
+              "gloss": "Transit through the interdicted edge itself; the Queen's escape from Naboo (Episode I) — a single successful run that repriced the blockade's credibility galaxy-wide."
+            },
+            {
+              "id": "geo:SmugglingRun",
+              "label": "Smuggling run",
+              "kind": "Class",
+              "subClassOf": "geo:EconomicProcess",
+              "gloss": "Leakage process with named routes and reputational pricing — 'the ship that made the Kessel Run' (Episode IV) is route reputation quoted as marketing."
+            },
+            {
+              "id": "geo:LeakageProcess",
+              "label": "Leakage process",
+              "kind": "Class",
+              "subClassOf": "geo:EconomicProcess",
+              "gloss": "Rerouting around standing measures; the fringe economy is, structurally, the leakage term of the core economy."
+            },
+            {
+              "id": "geo:EvasionInfrastructure",
+              "label": "Evasion infrastructure",
+              "kind": "Class",
+              "subClassOf": "geo:MaterialEntity",
+              "gloss": "Durable target-built evasion assets: the Falcon's smuggling compartments ('I use them for smuggling. I never thought I'd be smuggling myself in them', Episode IV). The mirror of geo:ChokepointPosition."
+            },
+            {
+              "id": "geo:AnticipatoryAdjustment",
+              "label": "Anticipatory adjustment",
+              "kind": "Class",
+              "subClassOf": "geo:EconomicProcess",
+              "gloss": "Adaptation before any threat; Cloud City's entire operating model was anticipatory obscurity."
+            },
+            {
+              "id": "geo:FragmentationProcess",
+              "label": "Fragmentation process",
+              "kind": "Class",
+              "subClassOf": "geo:EconomicProcess",
+              "gloss": "Network-scale exit: thousands of systems leaving the Republic's legal-commercial order under the Separatist movement (Episode II)."
+            }
+          ]
+        },
+        "8.4": {
+          "title": "The observation layer: modeling the librarian",
+          "classes": [
+            {
+              "id": "geo:RecordingEvent",
+              "label": "Recording event",
+              "kind": "Class",
+              "subClassOf": "geo:ObservationProcess",
+              "gloss": "Occurrent by which an episode-stage becomes an archive entry."
+            },
+            {
+              "id": "geo:ArchiveEntry",
+              "label": "Archive entry",
+              "kind": "Class",
+              "subClassOf": "geo:InformationArtifact",
+              "gloss": "Information artifact so produced; a Jedi Archives record as type specimen."
+            },
+            {
+              "id": "geo:ArchiveErasure",
+              "label": "Archive erasure",
+              "kind": "Class",
+              "subClassOf": "geo:Act",
+              "gloss": "Deletion of records from an authoritative archive; Kamino removed from the Jedi Archives (Episode II). The canonical demonstration that archives record the recorder, not the world — see axiom A10 and the Chief Librarian's epigraph."
+            },
+            {
+              "id": "geo:Salience",
+              "label": "Salience",
+              "kind": "Class",
+              "subClassOf": "geo:Quality",
+              "gloss": "Attention-intensity quality; Senate floor events carry maximal salience, fringe transactions near-zero."
+            },
+            {
+              "id": "geo:recordingProbability",
+              "label": "Recording probability",
+              "kind": "Property",
+              "gloss": "Stage- and stratum-level attribute q ∈ [0,1]. Senate acts approach 1; Mos Eisley cantina transactions approach 0; and one archive with q = 1 was edited after the fact, which is the harder problem."
+            }
+          ]
+        },
+        "8.5": {
+          "title": "Escalation structures",
+          "classes": [
+            {
+              "id": "geo:EscalationSequence",
+              "label": "Escalation sequence",
+              "kind": "Class",
+              "subClassOf": "geo:Episode",
+              "gloss": "Realized, dated series of rungs. Bespin: landing rights → dinner invitation → deal → alteration → garrison → carbonite (Episode V) — six rungs in roughly a day."
+            },
+            {
+              "id": "geo:LadderDesign",
+              "label": "Ladder design",
+              "kind": "Class",
+              "subClassOf": "geo:InformationArtifact",
+              "gloss": "Doctrine's ordered menu of contemplated rungs; the Tarkin doctrine's ladder has conspicuously few rungs, which is the doctrine."
+            },
+            {
+              "id": "geo:Ratchet",
+              "label": "Ratchet",
+              "kind": "Class",
+              "subClassOf": "geo:Quality",
+              "gloss": "Low-reversibility rungs; emergency powers voted in Episode II were a ratchet dressed as a sunset."
+            },
+            {
+              "id": "geo:OffRamp",
+              "label": "Off ramp",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "Engineered de-escalation feature; systematically absent from this corpus's sender designs, with results as observed."
+            },
+            {
+              "id": "geo:Truce",
+              "label": "Truce",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "Deontic continuant suspending specified measures."
+            },
+            {
+              "id": "geo:DeadlineEvent",
+              "label": "Deadline event",
+              "kind": "Class",
+              "subClassOf": "geo:Act",
+              "gloss": "Projected onto the timeline by a schedule or expiry; 'The Emperor is coming here?' (Episode VI) — a construction deadline enforced by visit."
+            },
+            {
+              "id": "geo:DisputedDeonticStatus",
+              "label": "Disputed deontic status",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "Rival attributed claims about whether an obligation binds; whether a treaty signed under blockade would have bound Naboo ('I will sign no treaty') is the corpus's standing example, mooted by ForcibleTermination."
+            },
+            {
+              "id": "geo:expiryDate",
+              "label": "Expiry date",
+              "kind": "Property"
+            }
+          ]
+        }
+      }
+    },
+    "STR": {
+      "title": "Strategies, Doctrines, and Postures",
+      "reference_section": "9",
+      "core_classes": [
+        {
+          "id": "geo:Strategy",
+          "label": "Strategy",
+          "kind": "Class"
+        },
+        {
+          "id": "geo:Doctrine",
+          "label": "Doctrine",
+          "kind": "Class"
+        },
+        {
+          "id": "geo:Posture",
+          "label": "Posture",
+          "kind": "Class"
+        }
+      ],
+      "orientation_scheme": {
+        "note": "SKOS scheme of strategic orientations, adapted from Wigell's terrestrial typology to the corpus.",
+        "values": [
+          "senatorial institutionalism",
+          "franchise mercantilism",
+          "hegemonic terror",
+          "criminal clientelism"
+        ]
+      },
+      "named_strategies": [
+        {
+          "id": "geo:TarkinDoctrine",
+          "label": "Tarkin doctrine",
+          "kind": "Class",
+          "subClassOf": "geo:Doctrine",
+          "gloss": "Rule through demonstrated terror capacity in place of institutional capacity: 'Fear will keep the local systems in line — fear of this battle station' (Episode IV). Stated, applied, and refuted within the same film."
+        },
+        {
+          "id": "geo:EmergencyCentralization",
+          "label": "Emergency centralization",
+          "kind": "Class",
+          "subClassOf": "geo:Strategy",
+          "gloss": "Accretion of executive power through voted emergencies, each formally temporary, none reversed. Terminal state attested: 'So this is how liberty dies — with thunderous applause' (Episode III)."
+        },
+        {
+          "id": "geo:SeparatistExit",
+          "label": "Separatist exit",
+          "kind": "Class",
+          "subClassOf": "geo:Strategy",
+          "gloss": "Coordinated secession of commerce-guild-aligned systems from the galactic legal-commercial order (Episode II); exit as bargaining posture, orchestrated by the same patron as the response to it."
+        },
+        {
+          "id": "geo:RegulatoryObscurity",
+          "label": "Regulatory obscurity",
+          "kind": "Class",
+          "subClassOf": "geo:Strategy",
+          "gloss": "Staying beneath enforcement notice as an operating model: 'This facility is small enough not to be noticed' (Episode V). Works until the hegemon needs your position rather than your output."
+        },
+        {
+          "id": "geo:FringeArbitrage",
+          "label": "Fringe arbitrage",
+          "kind": "Class",
+          "subClassOf": "geo:Strategy",
+          "gloss": "Operating across the jurisdiction boundary to capture the wedge between legal orders: smugglers, bounty hunters, and the syndicates that clear their trades."
+        },
+        {
+          "id": "geo:MilitarizationProgram",
+          "label": "Militarization program",
+          "kind": "Class",
+          "subClassOf": "geo:Strategy",
+          "gloss": "Standing conversion of fiscal capacity into coercive capacity; the Military Creation Act debate (Episode II) is the corpus's only on-screen argument about guns versus institutions, and the guns had already been ordered."
+        }
+      ]
+    },
+    "OUT": {
+      "title": "Objectives, Effects, Incidence, and Evaluation",
+      "reference_section": "10",
+      "subsections": {
+        "10.1": {
+          "title": "Objectives",
+          "classes": [
+            {
+              "id": "geo:ObjectiveSpecification",
+              "label": "Objective specification",
+              "kind": "Class",
+              "subClassOf": "geo:InformationArtifact",
+              "gloss": "Attached to measures, actions, episodes, or strategies; marked stated or inferred. This corpus's methodological center: every major sender's stated and inferred objectives diverge."
+            },
+            {
+              "id": "geo:stated",
+              "label": "Stated",
+              "kind": "Property"
+            },
+            {
+              "id": "geo:inferred",
+              "label": "Inferred",
+              "kind": "Property"
+            }
+          ],
+          "objectives_enumeration": [
+            {
+              "value": "coerce",
+              "gloss": "Change behavior: force the treaty signature at Naboo."
+            },
+            {
+              "value": "constrain",
+              "gloss": "Deny capability: the blockade as denial of supply."
+            },
+            {
+              "value": "signal",
+              "gloss": "To target, third parties, or domestic audiences; Alderaan's stated function was entirely this."
+            },
+            {
+              "value": "deter",
+              "gloss": "'Fear will keep the local systems in line' — deterrence as the doctrine's load-bearing verb."
+            },
+            {
+              "value": "extract",
+              "gloss": "Rents and concessions: route taxation, protection payments, connector tolls."
+            },
+            {
+              "value": "domestic-political",
+              "gloss": "Senate opinion management; the no-confidence vote against Valorum (Episode I) was the blockade's most consequential effect, and its patron's actual objective."
+            },
+            {
+              "value": "regime-security",
+              "gloss": "The best-performing objective in the corpus, stated by no one and inferrable for one agent across all six films."
+            }
+          ]
+        },
+        "10.2": {
+          "title": "Effects",
+          "loci": {
+            "target_effects": [
+              {
+                "id": "geo:HumanitarianEffect",
+                "label": "Humanitarian effect",
+                "kind": "Class",
+                "subClassOf": "geo:Effect",
+                "gloss": "Population-borne harm: 'The death toll is catastrophic' (Episode I). The corpus states incidence plainly; senders do not."
+              },
+              {
+                "id": "geo:RallyEffect",
+                "label": "Rally effect",
+                "kind": "Class",
+                "subClassOf": "geo:Effect",
+                "gloss": "Coercion consolidating target-side resistance; Alderaan's destruction as the Rebellion's best recruiter — the canonical backfire (axiom A11)."
+              },
+              {
+                "id": "geo:LeadershipTurnoverEffect",
+                "label": "Leadership turnover effect",
+                "kind": "Class",
+                "subClassOf": "geo:Effect",
+                "gloss": "Coercion toppling a leader — in the corpus's twist, the bystander-institution's leader: Chancellor Valorum fell to the Naboo crisis, by design of the crisis's patron (Episode I)."
+              }
+            ],
+            "sender_effects": [
+              {
+                "id": "geo:FriendlyFire",
+                "label": "Friendly fire",
+                "kind": "Class",
+                "subClassOf": "geo:Effect",
+                "gloss": "Sender-side losses from the sender's own measure: a blockading carrier forgoes its own franchise revenue on the routes it closes."
+              },
+              {
+                "id": "geo:OvercomplianceEffect",
+                "label": "Overcompliance effect",
+                "kind": "Class",
+                "subClassOf": "geo:Effect",
+                "gloss": "Compliance exceeding what the measure requires, out of fear; post-Alderaan, the doctrine's intended product — paired in practice with covert defection, which is the hysteresis the doctrine did not price."
+              }
+            ],
+            "third_party_effects": [
+              {
+                "id": "geo:ConnectorRent",
+                "label": "Connector rent",
+                "kind": "Class",
+                "subClassOf": "geo:Effect",
+                "gloss": "Rent captured by a connector position while a perimeter binds: smuggler premiums under interdiction, Cloud City margins outside the guild. Ends when the perimeter arrives (axiom A7)."
+              }
+            ],
+            "system_effects": [
+              {
+                "id": "geo:NormErosion",
+                "label": "Norm erosion",
+                "kind": "Class",
+                "subClassOf": "geo:Effect",
+                "gloss": "Degradation of the rules layer itself; the dissolution of the Imperial Senate (Episode IV) removed the last institutional restraint and was announced in a staff meeting."
+              },
+              {
+                "id": "geo:FragmentationCost",
+                "label": "Fragmentation cost",
+                "kind": "Class",
+                "subClassOf": "geo:Effect",
+                "gloss": "System-wide output loss from network fragmentation; the Clone Wars as the galaxy's fragmentation shock."
+              },
+              {
+                "id": "geo:AutarkyDrive",
+                "label": "Autarky drive",
+                "kind": "Class",
+                "subClassOf": "geo:Effect",
+                "gloss": "Coercion pushing targets toward self-provisioning; the Rebellion's hidden-base economy as autarkic capital formation under interdiction."
+              }
+            ]
+          }
+        },
+        "10.3": {
+          "title": "Incidence",
+          "classes": [
+            {
+              "id": "geo:IncidenceRecord",
+              "label": "Incidence record",
+              "kind": "Class",
+              "subClassOf": "geo:InformationArtifact",
+              "gloss": "Distributional decomposition of who bears a measure: at Naboo, the population; at Bespin, the workforce ordered to evacuate; on the second Death Star, a construction crew the corpus declines to enumerate."
+            }
+          ]
+        },
+        "10.4": {
+          "title": "Evaluation",
+          "classes": [
+            {
+              "id": "geo:Evaluation",
+              "label": "Evaluation",
+              "kind": "Class",
+              "subClassOf": "geo:InformationArtifact",
+              "gloss": "Required to declare objective, counterfactual, alternative menu, horizon, evidence, coder. An evaluation of the Tarkin doctrine that omits the RallyEffect is not an evaluation (axiom A11)."
+            }
+          ]
+        }
+      }
+    },
+    "GOV": {
+      "title": "Law, Institutions, and Jurisdiction",
+      "reference_section": "11",
+      "subsections": {
+        "11.1": {
+          "title": "Legal bases",
+          "classes": [
+            {
+              "id": "geo:LegalBasis",
+              "label": "Legal basis",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "Deontic entity authorizing a measure."
+            },
+            {
+              "id": "geo:SenateResolution",
+              "label": "Senate resolution",
+              "kind": "Class",
+              "subClassOf": "geo:LegalBasis",
+              "gloss": "Deliberative authorization; arrives, when it arrives, after the episode has resolved itself ('The Senate will vote on this...')."
+            },
+            {
+              "id": "geo:EmergencyPowersAct",
+              "label": "Emergency powers act",
+              "kind": "Class",
+              "subClassOf": "geo:LegalBasis",
+              "gloss": "The vote creating wartime executive authority (Episode II); formally temporary, factually terminal. The corpus's type specimen of the ratchet dressed as a sunset."
+            },
+            {
+              "id": "geo:ImperialDecree",
+              "label": "Imperial decree",
+              "kind": "Class",
+              "subClassOf": "geo:LegalBasis",
+              "gloss": "Post-19 BBY unilateral authorization; the dissolution of the Senate converted all legal bases to this class in one announcement."
+            },
+            {
+              "id": "geo:FranchiseCharter",
+              "label": "Franchise charter",
+              "kind": "Class",
+              "subClassOf": "geo:LegalBasis",
+              "gloss": "As legal basis: the standing grant under which the Trade Federation held route rights and, remarkably, a Senate seat."
+            },
+            {
+              "id": "geo:CustomaryFringeLaw",
+              "label": "Customary fringe law",
+              "kind": "Class",
+              "subClassOf": "geo:LegalBasis",
+              "gloss": "Unwritten Hutt-space order: debts enforced, slavery legal, wagers binding, disputes settled privately and permanently. Law without a legislature, effective without a court."
+            },
+            {
+              "id": "geo:GuildCode",
+              "label": "Guild code",
+              "kind": "Class",
+              "subClassOf": "geo:LegalBasis",
+              "gloss": "Membership rules of standards-and-cartel bodies; Cloud City's non-membership in the Mining Guild placed it outside this basis and its protections alike."
+            }
+          ]
+        },
+        "11.2": {
+          "title": "The jurisdiction boundary",
+          "classes": [
+            {
+              "id": "geo:JurisdictionBoundary",
+              "label": "Jurisdiction boundary",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "The reified edge of a legal order, crisply attested in dialogue: 'The Republic doesn't exist out here' and 'Republic credits are no good out here' (Episode I). Currency acceptance is the boundary's cheapest measurement instrument (Decision D10)."
+            }
+          ]
+        },
+        "11.3": {
+          "title": "Regimes and coordination arrangements",
+          "classes": [
+            {
+              "id": "geo:SenateRepresentationRegime",
+              "label": "Senate representation regime",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "The membership order granting corporate bodies legislative seats alongside worlds; the Trade Federation's seat is the era's constitutive entanglement of regulator and regulated."
+            },
+            {
+              "id": "geo:GuildRegime",
+              "label": "Guild regime",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "Standing coordination arrangement among extractive or commercial operators; the Mining Guild as attested instance (Episode V)."
+            },
+            {
+              "id": "geo:ClientelistRegime",
+              "label": "Clientelist regime",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "Patron-client order sustained by protection and debt; Hutt space as regime rather than anarchy — the ontology's position is that Jabba's palace has a constitution, unwritten and enforced."
+            }
+          ]
+        },
+        "11.4": {
+          "title": "Jurisdiction, reified",
+          "classes": [
+            {
+              "id": "geo:JurisdictionClaim",
+              "label": "Jurisdiction claim",
+              "kind": "Class",
+              "subClassOf": "geo:DeonticEntity",
+              "gloss": "Reified: holder, scope, basis, modality, contestation status, temporal extent."
+            }
+          ]
+        }
+      }
+    },
+    "DOM": {
+      "title": "Sectoral Domains",
+      "reference_section": "12",
+      "summary": "Packagings of NET/POW machinery with sector-specific node types, bottleneck stages, and canonical film evidence. Eight specified; the pattern extends.",
+      "domains": [
+        {
+          "id": "DOM-1",
+          "name": "Tibanna gas and exotic extraction",
+          "stages": [
+            "atmospheric extraction (Cloud City)",
+            "refinement",
+            "carriage"
+          ],
+          "canonical_episodes": [
+            "Bespin garrison and deal alteration (Episode V)"
+          ]
+        },
+        {
+          "id": "DOM-2",
+          "name": "Spice",
+          "stages": [
+            "extraction (the Kessel mines, attested as threat: 'the spice mines of Kessel', Episode IV)",
+            "carriage — the binding stage, hence the smuggling premium"
+          ]
+        },
+        {
+          "id": "DOM-3",
+          "name": "Droids",
+          "stages": [
+            "foundry production (Geonosis, Episode II)",
+            "retail",
+            "salvage and secondary market (Jawa sandcrawler trade, Episode IV)"
+          ],
+          "note": "One product line spanning the formal-informal boundary end to end; the secondary market's warranty regime ('this R2 unit has a bad motivator!') is attested on screen."
+        },
+        {
+          "id": "DOM-4",
+          "name": "Military biotech",
+          "stages": [
+            "genome sourcing (one bounty hunter, one fee)",
+            "cloning (Kamino sole source)",
+            "training and delivery (decade lead time)"
+          ]
+        },
+        {
+          "id": "DOM-5",
+          "name": "Finance and clearing",
+          "stages": [
+            "deposit and clearing (Banking Clan)",
+            "war finance",
+            "fringe settlement (currency refusal at the boundary)"
+          ]
+        },
+        {
+          "id": "DOM-6",
+          "name": "Hyperlane logistics",
+          "stages": [
+            "route franchises and taxation",
+            "port handling and docking",
+            "interdiction and blockade",
+            "smuggling as the leakage term"
+          ]
+        },
+        {
+          "id": "DOM-7",
+          "name": "Water and hydrology",
+          "stages": [
+            "moisture farming as smallholder extraction (Tatooine, Episodes II, IV)",
+            "hydrostatic-bubble urbanism as public infrastructure (Otoh Gunga, Episode I)"
+          ]
+        },
+        {
+          "id": "DOM-8",
+          "name": "Megaproject construction",
+          "stages": [
+            "appropriation (never shown — a recording-probability finding in itself)",
+            "orbital assembly (both Death Stars)",
+            "labor sourcing (unrecorded; the ontology flags the question)"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "id": "geo:ProspectiveChokepoint",
+          "label": "Prospective chokepoint",
+          "kind": "Class",
+          "subClassOf": "geo:Assessment",
+          "gloss": "Facility or junction whose chokepoint status is asserted for a future horizon; a battle station under construction is the corpus's largest instance, twice."
+        }
+      ]
+    },
+    "MSR": {
+      "title": "Measurement, Data Alignment, and Provenance",
+      "reference_section": "13",
+      "subsections": {
+        "13.1": {
+          "title": "The measurement contract",
+          "classes": [
+            {
+              "id": "geo:MeasurementResult",
+              "label": "Measurement result",
+              "kind": "Class",
+              "subClassOf": "geo:InformationArtifact",
+              "gloss": "Every measurement declares estimand, estimator, sources, horizon, uncertainty. The corpus offers few numbers; the ontology insists the few be provenanced."
+            }
+          ]
+        },
+        "13.2": {
+          "title": "Dataset alignment",
+          "classes": [
+            {
+              "id": "geo:PolicyAction",
+              "label": "Policy action",
+              "kind": "Class",
+              "subClassOf": "geo:Act",
+              "gloss": "Alignment class for event-coded records; maps Senate and Imperial acts onto episode stages."
+            },
+            {
+              "id": "geo:Threat",
+              "label": "Threat",
+              "kind": "Class",
+              "subClassOf": "geo:Act"
+            },
+            {
+              "id": "geo:Demand",
+              "label": "Demand",
+              "kind": "Class",
+              "subClassOf": "geo:Act"
+            }
+          ]
+        },
+        "13.3": {
+          "title": "The event-ontology bridge",
+          "summary": "Senate records and Jedi Archive entries map to episode stages; the fringe stratum is unrecorded by construction, and one archive with nominal completeness was edited (geo:ArchiveErasure). All inference from records is inference about the recorded stratum."
+        },
+        "13.4": {
+          "title": "Identifier policy",
+          "summary": "Calendar anchored to the Battle of Yavin (BBY/ABY). Agent identifiers survive constitutional transformation via geo:sameAgentAs: the Republic's obligations do not vanish because the letterhead changed in 19 BBY."
+        }
+      }
+    }
+  },
+  "relations": {
+    "reference_section": "14",
+    "properties": [
+      {
+        "id": "geo:hasPart",
+        "label": "Has part",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:memberOf",
+        "label": "Member of",
+        "kind": "Property",
+        "gloss": "Agent-to-collective membership: a world in the Senate, an operator in the Mining Guild."
+      },
+      {
+        "id": "geo:bearsRole",
+        "label": "Bears role",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:dependsOn",
+        "label": "Depends on",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:hasJurisdictionOver",
+        "label": "Has jurisdiction over",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:targetsAgent",
+        "label": "Targets agent",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:targetsSector",
+        "label": "Targets sector",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:targetsCargo",
+        "label": "Targets cargo",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:imposes",
+        "label": "Imposes",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:actsThrough",
+        "label": "Acts through",
+        "kind": "Property",
+        "gloss": "The Federation actsThrough its droid army; Sidious actsThrough the Federation; the composition of the two is Episode I."
+      },
+      {
+        "id": "geo:hasLegalBasis",
+        "label": "Has legal basis",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:hasObjective",
+        "label": "Has objective",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:hasEffect",
+        "label": "Has effect",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:hasSalience",
+        "label": "Has salience",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:recordedBy",
+        "label": "Recorded by",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:hasDeadline",
+        "label": "Has deadline",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:suspends",
+        "label": "Suspends",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:terminates",
+        "label": "Terminates",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:modifies",
+        "label": "Modifies",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:creates",
+        "label": "Creates",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:escalates",
+        "label": "Escalates",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:deescalates",
+        "label": "Deescalates",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:respondsTo",
+        "label": "Responds to",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:retaliatesAgainst",
+        "label": "Retaliates against",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:erodes",
+        "label": "Erodes",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:substitutesFor",
+        "label": "Substitutes for",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:reroutesThrough",
+        "label": "Reroutes through",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:transitsThrough",
+        "label": "Transits through",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:confersRentOn",
+        "label": "Confers rent on",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:realizedIn",
+        "label": "Realized in",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:withinEpisode",
+        "label": "Within episode",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:withinCampaign",
+        "label": "Within campaign",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:borneBy",
+        "label": "Borne by",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:bottleneckStage",
+        "label": "Bottleneck stage",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:deploys",
+        "label": "Deploys",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:hasParticipant",
+        "label": "Has participant",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:atHorizon",
+        "label": "At horizon",
+        "kind": "Property"
+      },
+      {
+        "id": "geo:owes",
+        "label": "Owes",
+        "kind": "Property",
+        "gloss": "Debtor-to-creditor relation reifying into a geo:DebtState; the Solo–Jabba instance carries the corpus's most complete enforcement history."
+      },
+      {
+        "id": "geo:indenturedTo",
+        "label": "Indentured to",
+        "kind": "Property",
+        "gloss": "Bonded-labor relation; on Tatooine, transferable by wager."
+      },
+      {
+        "id": "geo:patronOf",
+        "label": "Patron of",
+        "kind": "Property",
+        "gloss": "Covert principal relation; carries publicity = deniable by default. One agent in the corpus bears it toward both sides of the same war."
+      }
+    ]
+  },
+  "axioms": {
+    "reference_section": "15.1",
+    "syntax": "Manchester (indicative rather than exhaustive)",
+    "axioms": [
+      {
+        "id": "A1",
+        "statement": "Every MeasureInForce is createdBy exactly one Imposition and is optionally endedBy at most one Termination or ForcibleTermination."
+      },
+      {
+        "id": "A2",
+        "statement": "Every InstrumentAction has exactly one imposedBy (an Agent) and exactly one dateOfAct (BBY/ABY)."
+      },
+      {
+        "id": "A3",
+        "statement": "Chokepoint is a time-indexed Role; no hyperlane junction, facility, or orbital approach is intrinsically a chokepoint."
+      },
+      {
+        "id": "A4",
+        "statement": "Leverage borne by Agent A over Agent B is atHorizon h; no Leverage instance may exist without a horizon index. The Trade Federation held blockade leverage at h = days and none at h = months; the distinction was discovered empirically."
+      },
+      {
+        "id": "A5",
+        "statement": "Every Dependence instance has at least one channel, one horizon, and one measurement provenance."
+      },
+      {
+        "id": "A6",
+        "statement": "DealAlteration presupposes asymmetry: the altering agent bears HegemonRole over the counterparty or holds a GarrisonEmplacement on its territory. 'Pray I don't alter it any further' is the type utterance."
+      },
+      {
+        "id": "A7",
+        "statement": "ConnectorRent accrues to a ConnectorRole only while a perimeter binds and the connector remains outside it; GarrisonEmplacement on the connector terminates the rent it came to tax. Bespin is the proof."
+      },
+      {
+        "id": "A8",
+        "statement": "Every ObjectiveSpecification is marked geo:stated or geo:inferred and carries provenance; regime-security is inferable, never stated."
+      },
+      {
+        "id": "A9",
+        "statement": "Every Evaluation declares objective class, counterfactual, alternative-policy menu, horizon, and evidence-plus-coder."
+      },
+      {
+        "id": "A10",
+        "statement": "Every RecordingEvent carries a stratum-level recordingProbability q ∈ [0,1]; statements over ArchiveEntries are statements about the recorded stratum. From the absence of an ArchiveEntry nothing follows about the world — contra the Chief Librarian ('If an item does not appear in our records, it does not exist', Episode II)."
+      },
+      {
+        "id": "A11",
+        "statement": "PlanetaryDestruction has reversibility = 0 and maximal NormErosion; any Evaluation of a terror doctrine that omits the RallyEffect is invalid. The Tarkin doctrine's own evaluation horizon closed at Yavin, four days after its demonstration."
+      },
+      {
+        "id": "A12",
+        "statement": "CovertPatronage carries publicity = deniable; when one agent bears PatronRole on both sides of an episode, the episode's stated objectives are screened off from its inferred ones, and only the patron's objectives explain the sequence. The Sidious axiom."
+      }
+    ],
+    "supporting_classes": [
+      {
+        "id": "geo:Assessment",
+        "label": "Assessment",
+        "kind": "Class",
+        "subClassOf": "geo:InformationArtifact",
+        "gloss": "Threshold-bearing claim with declared parameters."
+      },
+      {
+        "id": "geo:ChokepointAssessment",
+        "label": "Chokepoint assessment",
+        "kind": "Class",
+        "subClassOf": "geo:Assessment",
+        "gloss": "Assessment of chokepoint status at date d, portfolio π, horizon h."
+      },
+      {
+        "id": "geo:ForcibleTermination",
+        "label": "Forcible termination",
+        "kind": "Class",
+        "subClassOf": "geo:Act",
+        "gloss": "Termination of a measure by destruction of its enforcement apparatus: Naboo, Yavin, Endor."
+      },
+      {
+        "id": "geo:Process",
+        "label": "Process",
+        "kind": "Class",
+        "subClassOf": "bfo:Process",
+        "gloss": "Umbrella spine class referenced in worked examples."
+      }
+    ]
+  },
+  "worked_examples": {
+    "reference_section": "15.2–15.4",
+    "examples": [
+      {
+        "id": "A",
+        "name": "The Naboo blockade, 32 BBY: proxy sender, covert patron, forcible termination",
+        "section": "15.2"
+      },
+      {
+        "id": "B",
+        "name": "Bespin, 3 ABY: connector capture, deal alteration, and the end of a rent",
+        "section": "15.3"
+      },
+      {
+        "id": "C",
+        "name": "Alderaan, 0 BBY, in three sentences of triples: demonstration, rally, refutation",
+        "section": "15.4"
+      }
+    ]
+  },
+  "design_decisions": {
+    "reference_section": "16",
+    "decisions": [
+      {
+        "id": "D1",
+        "title": "Classification by means; intent by annotation"
+      },
+      {
+        "id": "D2",
+        "title": "Film canon only — Episodes I–VI; spin-off material is a separate, unaligned corpus"
+      },
+      {
+        "id": "D3",
+        "title": "BFO over bespoke"
+      },
+      {
+        "id": "D4",
+        "title": "The three-way instrument split (type / action / measure in force)"
+      },
+      {
+        "id": "D5",
+        "title": "Power-words as dispositions — fear included, midi-chlorians excluded"
+      },
+      {
+        "id": "D6",
+        "title": "Chokepoint as time-indexed role, not natural kind"
+      },
+      {
+        "id": "D7",
+        "title": "Reified n-ary states: debts, bounties, indentures, memberships"
+      },
+      {
+        "id": "D8",
+        "title": "The librarian inside the ontology: the Jedi Archives as observation layer, and its erasure as the cautionary instance"
+      },
+      {
+        "id": "D9",
+        "title": "Open enumerations, with one closed core"
+      },
+      {
+        "id": "D10",
+        "title": "The jurisdiction boundary as first-class entity; currency acceptance as its cheapest measurement"
+      },
+      {
+        "id": "D11",
+        "title": "Beyond the state: guilds, syndicates, monastic orders, and households as full agents"
+      },
+      {
+        "id": "D12",
+        "title": "The patron behind the sender: proxy and patron roles as standard equipment, not conspiracy garnish"
+      }
+    ]
+  },
+  "prospectus_alignment": {
+    "reference_section": "17",
+    "alignments": [
+      {
+        "prospectus": "P1",
+        "topic": "Blockade half-life: how fast do interdiction measures leak?",
+        "homes": [
+          "geo:Blockade",
+          "geo:hasHalfLife",
+          "geo:BlockadeRunning",
+          "geo:SubstitutionCapital",
+          "geo:EvasionInfrastructure"
+        ]
+      },
+      {
+        "prospectus": "P2",
+        "topic": "Inference under archival truncation: what can Senate records and an edited archive support?",
+        "homes": [
+          "geo:recordingProbability",
+          "geo:ArchiveErasure",
+          "geo:ArchiveEntry",
+          "geo:AtRiskDispute",
+          "geo:Salience"
+        ]
+      },
+      {
+        "prospectus": "P3",
+        "topic": "Connector capture: when does a connector position flip to a compliance node?",
+        "homes": [
+          "geo:ConnectorPosition",
+          "geo:ConnectorRent",
+          "geo:GarrisonEmplacement",
+          "geo:DealAlteration",
+          "geo:RegulatoryObscurity"
+        ]
+      },
+      {
+        "prospectus": "P4",
+        "topic": "Terror capacity versus institutional capacity: substitute, complement, or self-liquidating?",
+        "homes": [
+          "geo:TerrorCapacity",
+          "geo:InstitutionalCapacity",
+          "geo:TarkinDoctrine",
+          "geo:RallyEffect",
+          "geo:NormErosion",
+          "geo:OvercomplianceEffect"
+        ]
+      }
+    ],
+    "classes": [
+      {
+        "id": "geo:ArchiveTruncationModel",
+        "label": "Archive truncation model",
+        "kind": "Class",
+        "subClassOf": "geo:InformationArtifact",
+        "gloss": "Declared model of what the record-generating process drops: the fringe stratum by neglect, the Kamino entry by design."
+      }
+    ]
+  },
+  "revision_notes": {
+    "reference_section": "18",
+    "first_pass": {
+      "subsection": "18.1",
+      "title": "The Six-Film Corpus as a Stress Test",
+      "date": "2026-07-11",
+      "method": "Classes were added for attested phenomenon.",
+      "additions": [
+        {
+          "id": "geo:TerrorCapacity",
+          "type": "class",
+          "warrant": "The Tarkin doctrine states a capacity substitution."
+        },
+        {
+          "id": "geo:CovertPatronage / geo:PatronRole / geo:ProxyRole",
+          "type": "class cluster",
+          "warrant": "One agent financing and steering both sides of a war is the corpus's central mechanism; axiom A12."
+        },
+        {
+          "id": "geo:WagerTransfer",
+          "type": "class",
+          "warrant": "Title to persons and property transferred by bet, attested on screen (Episode I)."
+        },
+        {
+          "id": "geo:ForcibleTermination",
+          "type": "termination pathway",
+          "warrant": "Dominant pathway of the corpus."
+        },
+        {
+          "id": "geo:ArchiveErasure",
+          "type": "class",
+          "warrant": "Kamino deleted from the Jedi Archives; the observation layer needs an adversary."
+        }
+      ],
+      "refused": [
+        {
+          "id": "midi-chlorian-count-as-human-capital-index",
+          "reason": "A disposition proxy without measurement contract; fails MSR §13.1."
+        },
+        {
+          "id": "thermal-exhaust-port-as-chokepoint",
+          "reason": "A chokepoint in the military network layer, not the economic one; out of scope, however tempting."
+        },
+        {
+          "id": "ewok-gift-economy",
+          "reason": "Attested (Episode VI) but underdocumented; deferred to the nonmonetary-exchange extension point."
+        },
+        {
+          "id": "podracing-wagering-markets",
+          "reason": "Representable as geo:WagerTransfer plus ordinary market machinery; a module, not a class."
+        }
+      ]
+    }
+  },
+  "governance": {
+    "reference_section": "19",
+    "policy": {
+      "identifiers": "Stable IRIs; terms deprecated, never deleted; replacedBy pointers. The ontology outlives its polities, which in this corpus is a low bar.",
+      "extension": "Public term-request workflow with a required competency-question justification and a film-scene citation.",
+      "module_import_graph": [
+        "spine",
+        "ACT",
+        "NET",
+        "POW",
+        "INS",
+        "EPI",
+        "STR",
+        "OUT",
+        "GOV",
+        "DOM",
+        "MSR"
+      ],
+      "prospective_extension_points": [
+        "Wagering and gambling markets (Episode I) — a dedicated module over geo:WagerTransfer",
+        "Nonmonetary exchange (the Ewok gift economy, Episode VI)",
+        "Droid personhood and the labor/capital boundary (flagged at geo:ManufacturedLabor; the corpus prices droids as property and writes them as persons)",
+        "Force-sensitivity as human capital — refused for now; see D5"
+      ]
+    }
+  }
+}
