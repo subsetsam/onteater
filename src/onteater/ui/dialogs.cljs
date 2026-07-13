@@ -47,7 +47,7 @@
          Ollama, a cloud provider, or Azure Gov) works with no network."]
 
    [:div.help-about
-    [:span "Onteater · v0.1"]
+    [:span "Onteater · v0.1.1"]
     [:span "HTML + ClojureScript · d3 · Reagent/re-frame · KaTeX"]
     ;; Link out to the public source repository. target=_blank with
     ;; rel=noopener keeps the opener window from being reachable via
