@@ -104,22 +104,68 @@
       :reagent-render
       (fn [_] [:div.scenario-rendered {:ref #(when % (swap! store assoc :el %))}])})))
 
+(defn- format-elapsed
+  "Whole seconds -> \"hh:mm:ss\" (zero-padded)."
+  [secs]
+  (let [pad (fn [n] (if (< n 10) (str "0" n) (str n)))]
+    (str (pad (quot secs 3600)) ":"
+         (pad (mod (quot secs 60) 60)) ":"
+         (pad (mod secs 60)))))
+
+(defn- mapping-progress
+  "Live \"Mapping…\" status while a run is in flight. A single 250 ms interval
+  drives both animations: the space-padded dots cycle \"   \"→\".  \"→\".. \"→\"...\"
+  (one full cycle per second, held to constant width by `.run-dots`) and the
+  elapsed-time clock, recomputed from the run's `:started-at`, ticks visibly once
+  per second. The interval is cleared on unmount (run finished or cancelled)."
+  [_run]
+  (let [tick  (r/atom 0)
+        timer (atom nil)]
+    (r/create-class
+     {:display-name "mapping-progress"
+      :component-did-mount
+      (fn [_] (reset! timer (js/setInterval #(swap! tick inc) 250)))
+      :component-will-unmount
+      (fn [_] (when-let [t @timer] (js/clearInterval t)))
+      :reagent-render
+      (fn [run]
+        (let [n       (mod @tick 4)
+              dots    (str (apply str (repeat n ".")) (apply str (repeat (- 3 n) " ")))
+              elapsed (quot (- (.now js/Date) (:started-at run)) 1000)]
+          [:span.run-progress.run-spinner
+           "Mapping" [:span.run-dots dots]
+           (str " chunk " (inc (:done-chunks run)) "/" (:chunks run)
+                " (elapsed time: " (format-elapsed elapsed) ")")]))})))
+
 (defn- run-controls []
   (let [run   @(rf/subscribe [:scenario/run])
         model @(rf/subscribe [:llm/active-model-label])
         text  @(rf/subscribe [:scenario/raw-text])
-        running? (= :running (:status run))]
+        session @(rf/subscribe [:scenario/active-session])
+        running? (= :running (:status run))
+        ;; After a finished run, keep the elapsed time on screen so the user can
+        ;; see how long it took. `:ended-at` is set only on completion/error
+        ;; (not on cancel), and `:scenario/clear` drops the run map entirely.
+        done-secs (when (and (not running?) (:started-at run) (:ended-at run))
+                    (quot (- (:ended-at run) (:started-at run)) 1000))]
     [:div.scenario-actions
+     (when done-secs
+       [:span.run-progress
+        (str (if (= :error (:status run)) "Mapping failed" "Mapping complete")
+             " (elapsed time: " (format-elapsed done-secs) ")")])
      (if running?
        [:<>
-        [:span.run-progress.run-spinner
-         (str "Mapping… chunk " (inc (:done-chunks run)) "/" (:chunks run)
-              " (this can take a while on a local model)")]
+        [mapping-progress run]
         [:button.btn.btn-danger {:on-click #(rf/dispatch [:mapping/cancel])} "Cancel"]]
-       [:button.btn.btn-primary {:disabled (str/blank? text)
-                                 :title (if model (str "Map with " model) "Choose a model in Settings")
-                                 :on-click #(rf/dispatch [:mapping/run])}
-        "▶ Run mapping"])]))
+       [:<>
+        [:button.btn {:disabled (and (str/blank? text) (nil? session))
+                      :title "Clear the scenario text and mapping board"
+                      :on-click #(rf/dispatch [:scenario/clear])}
+         "Clear"]
+        [:button.btn.btn-primary {:disabled (str/blank? text)
+                                  :title (if model (str "Map with " model) "Choose a model in Settings")
+                                  :on-click #(rf/dispatch [:mapping/run])}
+         "▶ Run mapping"]])]))
 
 (defn pane []
   (let [text     @(rf/subscribe [:scenario/raw-text])

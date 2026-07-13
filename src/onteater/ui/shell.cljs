@@ -4,6 +4,7 @@
   around the two workspaces; it owns nothing domain-specific and routes to the
   active workspace view."
   (:require [re-frame.core :as rf]
+            [onteater.ui.brand :as brand]
             [onteater.ui.workspace-ontology :as ws-onto]
             [onteater.ui.workspace-scenario :as ws-scenario]
             [onteater.ui.dialogs :as dialogs]
@@ -14,41 +15,8 @@
 
 ;; --- brand mark -------------------------------------------------------------
 
-(def ^:private logo-svg
-  "Inline SVG for the Onteater mark shown at the left of the menu bar: a
-   front-facing tamandua head with big rounded ears, two glossy eyes, and a long
-   dark snout. Embedded as a string (rather than an external asset) so it survives
-   inlining into the shipped single-file build. See onteater_logo_alt.svg."
-  (str
-   "<svg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'>"
-   "<defs>"
-   "<linearGradient id='laHead' x1='0' y1='0' x2='0.4' y2='1'>"
-   "<stop offset='0%' stop-color='#F5E7CB'/><stop offset='100%' stop-color='#E2CDA4'/></linearGradient>"
-   "<linearGradient id='laDark' x1='0' y1='0' x2='0.3' y2='1'>"
-   "<stop offset='0%' stop-color='#3C332B'/><stop offset='100%' stop-color='#1B1712'/></linearGradient>"
-   "<radialGradient id='laNose' cx='38%' cy='30%' r='72%'>"
-   "<stop offset='0%' stop-color='#4A4038'/><stop offset='100%' stop-color='#141009'/></radialGradient>"
-   "</defs>"
-   "<g transform='rotate(-20 12 8)'>"
-   "<ellipse cx='12' cy='8' rx='6' ry='7.2' fill='url(#laDark)'/>"
-   "<ellipse cx='12.6' cy='8.8' rx='4.6' ry='5.9' fill='url(#laHead)'/>"
-   "<ellipse cx='12.9' cy='9.4' rx='2.4' ry='3.4' fill='#CE9E8B'/></g>"
-   "<g transform='rotate(20 36 8)'>"
-   "<ellipse cx='36' cy='8' rx='6' ry='7.2' fill='url(#laDark)'/>"
-   "<ellipse cx='35.4' cy='8.8' rx='4.6' ry='5.9' fill='url(#laHead)'/>"
-   "<ellipse cx='35.1' cy='9.4' rx='2.4' ry='3.4' fill='#CE9E8B'/></g>"
-   "<path d='M24 5 C 14 5 8.5 12 8.5 21 C 8.5 31 15 39.5 24 39.5 C 33 39.5 39.5 31 39.5 21 C 39.5 12 34 5 24 5 Z' fill='url(#laHead)'/>"
-   "<path d='M24 19 C 21.4 19 20.5 21.6 20.9 24.6 C 21.3 30 22 36 24 41 C 26 36 26.7 30 27.1 24.6 C 27.5 21.6 26.6 19 24 19 Z' fill='url(#laDark)'/>"
-   "<ellipse cx='24' cy='40' rx='3.7' ry='3.1' fill='url(#laNose)'/>"
-   "<ellipse cx='22.8' cy='38.6' rx='1.2' ry='0.9' fill='#6b5f54'/>"
-   "<ellipse cx='16.8' cy='23' rx='3.1' ry='3.4' fill='url(#laDark)'/>"
-   "<ellipse cx='31.2' cy='23' rx='3.1' ry='3.4' fill='url(#laDark)'/>"
-   "<circle cx='16.8' cy='23' r='2.1' fill='#15100C'/><circle cx='31.2' cy='23' r='2.1' fill='#15100C'/>"
-   "<circle cx='16.1' cy='22.2' r='0.8' fill='#F6EEDF'/><circle cx='30.5' cy='22.2' r='0.8' fill='#F6EEDF'/>"
-   "</svg>"))
-
 (defn- brand-mark []
-  [:span.brand-mark {:dangerouslySetInnerHTML {:__html logo-svg}}])
+  [:span.brand-mark {:dangerouslySetInnerHTML {:__html brand/logo-svg}}])
 
 ;; --- dropdown menus ---------------------------------------------------------
 

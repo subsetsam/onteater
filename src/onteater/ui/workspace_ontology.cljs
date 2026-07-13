@@ -8,13 +8,14 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [clojure.string :as str]
+            [onteater.ui.brand :as brand]
             [onteater.ui.canvas :as canvas]
             [onteater.ui.outline :as outline]
             [onteater.ui.inspector :as inspector]))
 
 (defn- empty-state []
   [:div.empty-state
-   [:div.empty-mark "🜛"]
+   [:div.empty-logo {:dangerouslySetInnerHTML {:__html brand/logo-svg}}]
    [:h2 "No ontology loaded"]
    [:p "Open an ontology file to explore it as an interactive graph. Onteater
         auto-detects the format and never modifies your file until you save."]

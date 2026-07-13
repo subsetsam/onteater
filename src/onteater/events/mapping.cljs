@@ -36,6 +36,17 @@
  (fn [db [_ text]] (assoc-in db [:scenario :raw-text] text)))
 
 (rf/reg-event-db
+ :scenario/clear
+ ;; Reset the scenario workspace to a blank slate: empty the text and drop the
+ ;; mapping board back to its pristine "No entries yet" state by orphaning the
+ ;; active session (cf. `:mapping/new-session`) and clearing the run status +
+ ;; curation history. Only touches `:scenario`, so LLM config under [:llm]/[:ollama]
+ ;; is preserved — the same model stays ready for the next Run mapping.
+ (fn [db _]
+   (update db :scenario merge {:raw-text "" :active nil :selected-entry nil
+                               :run nil :undo [] :redo []})))
+
+(rf/reg-event-db
  :scenario/toggle-rendered
  (fn [db _] (update-in db [:scenario :rendered?] not)))
 
@@ -106,7 +117,8 @@
              chunks (prompts/chunk-scenario text)]
          {:db (-> db
                   (assoc-in [:scenario :run] {:status :running :chunks (count chunks)
-                                              :done-chunks 0 :received 0 :buffer "" :error nil})
+                                              :done-chunks 0 :received 0 :buffer "" :error nil
+                                              :started-at (.now js/Date) :ended-at nil})
                   (assoc-in [:scenario :run :queue] (vec chunks)))
           :dispatch [:mapping/run-next]})))))
 
@@ -167,13 +179,15 @@
 
 (rf/reg-event-db
  :mapping/run-complete
- (fn [db _] (assoc-in db [:scenario :run :status] :done)))
+ (fn [db _] (-> db (assoc-in [:scenario :run :status] :done)
+                (assoc-in [:scenario :run :ended-at] (.now js/Date)))))
 
 (rf/reg-event-fx
  :mapping/run-error
  (fn [{:keys [db]} [_ err]]
    {:db (-> db (assoc-in [:scenario :run :status] :error)
-            (assoc-in [:scenario :run :error] (:message err)))
+            (assoc-in [:scenario :run :error] (:message err))
+            (assoc-in [:scenario :run :ended-at] (.now js/Date)))
     :dispatch [:ui/error (str "Mapping run failed: " (:message err))]}))
 
 (rf/reg-event-fx
