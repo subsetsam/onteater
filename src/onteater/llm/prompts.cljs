@@ -45,7 +45,7 @@
   "Build the compact schema view the LLM sees. Groups real (non-external) nodes by
   module, one line each, then lists the relation properties. `gloss-len` truncates
   glosses to keep the prompt small."
-  [model & [{:keys [gloss-len] :or {gloss-len 90}}]]
+  [model & [{:keys [gloss-len] :or {gloss-len 120}}]]
   (let [real (remove :external? (g/nodes model))
         classes (filter #(not= :property (:kind %)) real)
         props   (filter #(= :property (:kind %)) real)
