@@ -38,6 +38,30 @@
     (testing "a genuinely new (excerpt,node) pairing is added"
       (is (some #(= "geo:Sanction" (:node-id %)) merged)))))
 
+(deftest merge-accumulates-across-chunks
+  ;; One run maps chunk after chunk; a later chunk's results must never wipe an
+  ;; earlier chunk's proposals off the board (the staged-refine pass depends on
+  ;; every chunk's entries surviving to :mapping/map-phase-complete).
+  (let [chunk1 [{:excerpt "tariffs" :node-id "geo:Tariff"}]
+        chunk2 [{:excerpt "Beta" :node-id "geo:Agent"}
+                {:excerpt "tariffs" :node-id "geo:Tariff"}] ; overlap-window dup
+        merged (-> [] (m/merge-entries chunk1) (m/merge-entries chunk2))]
+    (testing "chunk 1's proposal survives chunk 2's merge"
+      (is (some #(= "geo:Tariff" (:node-id %)) merged)))
+    (testing "a dup re-proposed by the next chunk is not doubled"
+      (is (= 2 (count merged))))))
+
+(deftest clear-proposed-keeps-only-curated
+  (let [s (-> (session)
+              (m/add-entry {:excerpt "tariffs" :node-id "geo:Tariff" :status :forced})
+              (m/add-entry {:excerpt "Alpha" :node-id "geo:Agent" :status :accepted})
+              (m/add-entry {:excerpt "Beta" :node-id "geo:Agent" :status :rejected})
+              (m/add-entry {:excerpt "imposes" :node-id "geo:Act"})) ; :proposed
+        s2 (m/clear-proposed s)]
+    (is (= #{:forced :accepted :rejected}
+           (set (map :status (m/entries s2)))))
+    (is (not-any? #(= "imposes" (:excerpt %)) (m/entries s2)))))
+
 (deftest nth-occurrence-anchoring
   (let [text "tariffs here and tariffs there"]
     (is (= 0 (m/nth-occurrence text "tariffs" 1)))

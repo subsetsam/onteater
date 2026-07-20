@@ -38,6 +38,10 @@
       (= key "?")
       (rf/dispatch [:ui/help-toggle])
 
+      ;; `d` toggles dependency-cone mode (only acts on the timeline tab).
+      (= (.toLowerCase key) "d")
+      (rf/dispatch [:timeline/key-cone])
+
       :else nil)))
 
 (defn install!

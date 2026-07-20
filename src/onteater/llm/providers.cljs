@@ -125,13 +125,23 @@
     ALL of its properties;
   - unsupported numeric/string constraints are stripped (minimum, maximum,
     minLength, maxLength, multipleOf) — Anthropic rejects them;
-  - enum / type / items / description pass through untouched.
+  - oversized enums are dropped (the whole :enum key): mapping-schema's node_id
+    enum can list every ontology node id, which llama.cpp handles as GBNF but
+    OpenAI strict mode caps (>250 values must stay under ~7.5k chars) and other
+    vendors 400 on — better an unconstrained string (validate-entries is the
+    backstop) than a failed run;
+  - small enums / type / items / description pass through untouched.
 
   Pure and recursive; safe on any schema-shaped nested map."
   [s]
   (cond
     (map? s)
     (let [s (apply dissoc s [:minimum :maximum :minLength :maxLength :multipleOf])
+          s (if (and (sequential? (:enum s))
+                     (or (> (count (:enum s)) 250)
+                         (> (reduce + 0 (map (comp count str) (:enum s))) 7000)))
+              (dissoc s :enum)
+              s)
           s (into {} (map (fn [[k v]]
                             [k (if (= :enum k) v (strictify-schema v))])
                           s))]
@@ -224,16 +234,21 @@
                                         (openai-response-format json-schema)))})
 
 (defn- ollama-chat-request
-  [{:keys [model options]} {:keys [messages json-schema temperature]}]
+  [{:keys [model options]} {:keys [messages json-schema temperature num-ctx]}]
   ;; Exactly the request events/mapping + events/chat always built. Ollama's
   ;; native structured output rides in :format; :options carries temperature.
+  ;; `num-ctx` (from prompts/messages-num-ctx) sizes the context window to the
+  ;; request — without it Ollama's small default silently truncates long
+  ;; system prompts. A user-set num_ctx in the saved options wins.
   {:method "POST"
    :path "/api/chat"
    :headers {}
    :body (cond-> {:model model
                   :messages messages
                   :stream false
-                  :options (or options {:temperature temperature})}
+                  :options (cond-> (or options {:temperature temperature})
+                             (and num-ctx (nil? (:num_ctx options)))
+                             (assoc :num_ctx num-ctx))}
            json-schema (assoc :format json-schema))})
 
 (defn chat-request

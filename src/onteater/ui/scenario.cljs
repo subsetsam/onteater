@@ -104,8 +104,9 @@
       :reagent-render
       (fn [_] [:div.scenario-rendered {:ref #(when % (swap! store assoc :el %))}])})))
 
-(defn- format-elapsed
-  "Whole seconds -> \"hh:mm:ss\" (zero-padded)."
+(defn format-elapsed
+  "Whole seconds -> \"hh:mm:ss\" (zero-padded). Public so the timeline run controls
+  (`onteater.ui.timeline`) reuse the same format as the mapping timer."
   [secs]
   (let [pad (fn [n] (if (< n 10) (str "0" n) (str n)))]
     (str (pad (quot secs 3600)) ":"
@@ -131,11 +132,100 @@
       (fn [run]
         (let [n       (mod @tick 4)
               dots    (str (apply str (repeat n ".")) (apply str (repeat (- 3 n) " ")))
-              elapsed (quot (- (.now js/Date) (:started-at run)) 1000)]
+              elapsed (quot (- (.now js/Date) (:started-at run)) 1000)
+              refine? (= :refine (:phase run))]
           [:span.run-progress.run-spinner
-           "Mapping" [:span.run-dots dots]
-           (str " chunk " (inc (:done-chunks run)) "/" (:chunks run)
+           (if refine? "Refining" "Mapping") [:span.run-dots dots]
+           (str (if refine?
+                  (str " batch " (inc (:refine-done run 0)) "/" (:refine-total run))
+                  (str " chunk " (inc (:done-chunks run)) "/" (:chunks run)))
+                (when-let [s (:strategy run)]
+                  (when (not= :full s) (str " [" (name s) "]")))
                 " (elapsed time: " (format-elapsed elapsed) ")")]))})))
+
+(defn- animated-dots
+  "A standalone \"…\" that cycles \"   \"→\".  \"→\".. \"→\"...\" once per second,
+  held to constant width by `.run-dots`. Same 250 ms interval and cadence as
+  `mapping-progress`; the interval is cleared on unmount."
+  []
+  (let [tick  (r/atom 0)
+        timer (atom nil)]
+    (r/create-class
+     {:display-name "animated-dots"
+      :component-did-mount
+      (fn [_] (reset! timer (js/setInterval #(swap! tick inc) 250)))
+      :component-will-unmount
+      (fn [_] (when-let [t @timer] (js/clearInterval t)))
+      :reagent-render
+      (fn []
+        (let [n (mod @tick 4)]
+          [:span.run-dots
+           (str (apply str (repeat n ".")) (apply str (repeat (- 3 n) " ")))]))})))
+
+(defn- strategy-select
+  "How the ontology is presented to the mapping LLM: auto (size-gated), full
+  (whole compaction), scoped (lexically scoped per chunk), or staged (coarse pass
+  + per-branch refinement)."
+  []
+  (let [strategy @(rf/subscribe [:scenario/strategy])]
+    [:select.chip {:value (if strategy (name strategy) "auto")
+                   :title "Ontology presentation strategy for the mapping run"
+                   :on-change #(let [v (.. % -target -value)]
+                                 (rf/dispatch [:mapping/set-strategy
+                                               (when (not= "auto" v) (keyword v))]))}
+     [:option {:value "auto"} "Strategy: auto"]
+     [:option {:value "full"} "Strategy: full"]
+     [:option {:value "scoped"} "Strategy: scoped"]
+     [:option {:value "staged"} "Strategy: staged"]]))
+
+(defn briefing-panel
+  "The ontology-briefing artifact: generated once per ontology by the LLM
+  (`:briefing/run`), validated, then EDITED here by the user; the text is
+  injected into every mapping prompt. Collapsed to a toolbar chip until opened."
+  []
+  (let [open? (r/atom false)]
+    (fn []
+      (let [briefing @(rf/subscribe [:ontology/briefing])
+            brun     @(rf/subscribe [:ontology/briefing-run])
+            running? (= :running (:status brun))]
+        [:div.briefing-wrap
+         [:button.chip
+          {:class (when @open? "chip-active")
+           :title (if briefing
+                    "Review/edit the ontology briefing injected into mapping prompts"
+                    "Generate a curated briefing for this ontology (one LLM call)")
+           :on-click #(swap! open? not)}
+          (cond running? "Briefing…"
+                briefing "Briefing ✓"
+                :else "Briefing")]
+         (when @open?
+           [:div.briefing-panel
+            (cond
+              running?
+              [:<>
+               [:p.hint "Generating briefing" [animated-dots]]
+               [:button.btn.btn-danger
+                {:title (if briefing
+                          "Cancel; mapping keeps using the current briefing"
+                          "Cancel; mapping runs without a briefing")
+                 :on-click #(rf/dispatch [:briefing/cancel])}
+                "Cancel"]]
+              (nil? briefing)
+              [:<>
+               [:p.hint (str "A briefing is a one-time LLM pass over the loaded ontology: "
+                             "module summaries and disambiguation rules, validated and "
+                             "then curated by you. It is injected into every mapping run.")]
+               (when (= :error (:status brun)) [:p.hint.error (:error brun)])
+               [:button.btn.btn-primary {:on-click #(rf/dispatch [:briefing/run])}
+                "Generate briefing"]]
+              :else
+              [:<>
+               [:textarea.briefing-input
+                {:value (:text briefing)
+                 :on-change #(rf/dispatch [:briefing/set-text (.. % -target -value)])}]
+               [:div.scenario-actions
+                [:button.btn {:on-click #(rf/dispatch [:briefing/run])} "Regenerate"]
+                [:button.btn {:on-click #(rf/dispatch [:briefing/clear])} "Remove"]]])])]))))
 
 (defn- run-controls []
   (let [run   @(rf/subscribe [:scenario/run])
@@ -153,11 +243,17 @@
        [:span.run-progress
         (str (if (= :error (:status run)) "Mapping failed" "Mapping complete")
              " (elapsed time: " (format-elapsed done-secs) ")")])
+     (when (and (not running?) (:ctx-overflow? run))
+       [:span.run-progress {:title (str "The assembled prompt exceeded the maximum "
+                                        "context window; the model may not have seen "
+                                        "all of it. Try the scoped or staged strategy.")}
+        "⚠ context overflow"])
      (if running?
        [:<>
         [mapping-progress run]
         [:button.btn.btn-danger {:on-click #(rf/dispatch [:mapping/cancel])} "Cancel"]]
        [:<>
+        [strategy-select]
         [:button.btn {:disabled (and (str/blank? text) (nil? session))
                       :title "Clear the scenario text and mapping board"
                       :on-click #(rf/dispatch [:scenario/clear])}
@@ -176,13 +272,14 @@
         pref     @(rf/subscribe [:ui/theme-pref])]
     [:div.scenario-pane
      [:div.scenario-toolbar
-      [:button.chip {:on-click #(rf/dispatch [:scenario/load-file])} "Upload .txt/.md"]
+      [:button.chip {:on-click #(rf/dispatch [:scenario/load-file])} "Upload txt/md"]
       [:div.seg-toggle
        [:button.chip {:class (when-not rendered? "chip-active")
                       :on-click #(when rendered? (rf/dispatch [:scenario/toggle-rendered]))} "Raw"]
        [:button.chip {:class (when rendered? "chip-active")
                       :on-click #(when-not rendered? (rf/dispatch [:scenario/toggle-rendered]))} "Rendered"]]
       [:div.toolbar-spacer]
+      [briefing-panel]
       [run-controls]]
      [:div.scenario-body
       (if (and rendered? (seq text))

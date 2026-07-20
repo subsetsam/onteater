@@ -18,6 +18,7 @@
             [onteater.events.ollama]       ; ollama settings + connection events
             [onteater.events.providers]    ; cloud/Azure-Gov provider settings events
             [onteater.events.mapping]      ; scenario mapping events
+            [onteater.events.timeline]     ; temporal-mapping (timeline) events
             [onteater.events.chat]))       ; chat drawer events (must load after mapping)
 
 ;; --- bootstrap ---------------------------------------------------------------
@@ -54,11 +55,14 @@
  :ui/close-menu
  (fn [db _] (assoc-in db [:ui :menu] nil)))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :ui/push-toast
- "Add a transient toast notification. `toast` is {:kind :info|:warn|:error :text s}."
- (fn [db [_ toast]]
-   (update-in db [:ui :toasts] (fnil conj []) (assoc toast :id (gensym "toast")))))
+ "Add a transient toast notification. `toast` is {:kind :info|:warn|:error :text s}.
+  The toast auto-dismisses after 10s, and can also be dismissed by clicking it."
+ (fn [{:keys [db]} [_ toast]]
+   (let [id (gensym "toast")]
+     {:db (update-in db [:ui :toasts] (fnil conj []) (assoc toast :id id))
+      :dispatch-later [{:ms 10000 :dispatch [:ui/dismiss-toast id]}]})))
 
 (rf/reg-event-db
  :ui/dismiss-toast

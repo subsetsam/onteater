@@ -15,6 +15,5 @@
 .DS_Store
 
 # planning docs (kept local, not published)
-/PLAN.md
-/LLMPLAN.md
 /CLAUDE.md
+/_private/

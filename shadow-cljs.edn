@@ -27,4 +27,17 @@
 
   :test {:target    :node-test
          :output-to "target/test.js"
-         :ns-regexp "-test$"}}}
+         :ns-regexp "-test$"}
+
+  ;; Offline mapping-eval harness (build/eval-mapping.mjs). Exposes the real
+  ;; prompt/parse/validate pipeline to node; the .mjs supplies HTTP to a live
+  ;; Ollama. Not part of `npm test`. Compile: `npx shadow-cljs compile eval`.
+  :eval {:target    :node-library
+         :output-to "target/eval.js"
+         :exports   {:parseOntology    onteater.eval/parse-ontology
+                     :chooseStrategy   onteater.eval/choose-strategy
+                     :buildBodies      onteater.eval/build-bodies
+                     :evaluate         onteater.eval/evaluate
+                     :refineBodies     onteater.eval/refine-bodies
+                     :applyRefinements onteater.eval/apply-refinements
+                     :promptReport     onteater.eval/prompt-report}}}}

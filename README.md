@@ -31,7 +31,24 @@ KaTeX), compiled with shadow-cljs.
   elements onto the ontology. Every mapping is validated against
   the ontology, shown across three linked levels (summary → board → detail), and
   fully curatable (accept / reject / force). A chat drawer answers questions about
-  the mapping and can propose changes as reviewable diffs.
+  the mapping and can propose changes as reviewable diffs. The center pane is
+  tabbed into three linked views over one session:
+  - **Mapping** — the entry board: scenario excerpts typed onto ontology classes,
+    each accept/reject/force-able and highlighted back in the scenario text.
+  - **Timeline** — a second extraction pass lifts the mapped elements into a
+    temporal/causal graph: dated **events** ordered by a date → dependency →
+    narrative cascade, linked by *precedes / causes / enables / responds-to /
+    part-of / terminates* **relations**, drawn as a swimlane DAG (lane by entity,
+    module, or episode). Forks, joins, parallel threads, and feedback cycles are
+    first-class; select an event to read its upstream/downstream dependency cone
+    and the paths between any two events. Drag glyph-to-glyph to add a relation.
+  - **Gaps** — a pure completeness audit (no LLM) of where the ontology *fails*
+    the scenario: untyped events and relations, typings too shallow for the
+    available leaf classes, unroled participants, and two-directional class
+    coverage (unused classes vs. overloaded ones). Each gap offers *"Draft
+    ontology element from this gap…"* (jumps to the Ontology editor with a
+    pre-filled add-node dialog); a re-run reports which gaps cleared, and the
+    whole report exports as Markdown.
 
 The data model is **format-agnostic**. Onteater ships three adapters:
 
@@ -114,9 +131,13 @@ the tabs and is shared by every provider (Anthropic models ignore it — they re
 sampling parameters).
 
 API keys live in memory for the session only. To keep one across reloads, tick
-**"Remember key on this device"** on that provider's tab — the key is then stored
-**unencrypted** in this browser's IndexedDB. Non-secret settings (chosen provider,
-base URLs, models) always persist.
+**"Remember key on this device"** on that provider's tab — the key is then
+**encrypted with a passphrase you set** (AES-GCM under a PBKDF2-derived key, via
+the browser's Web Crypto API) and only the ciphertext is written to this
+browser's IndexedDB; after a reload, enter the passphrase to unlock saved keys.
+This protects credentials *at rest* — an app that calls LLMs from page JS must
+recover the plaintext at request time, so session-only remains the strongest
+option. Non-secret settings (chosen provider, base URLs, models) always persist.
 
 ### Ollama (local)
 
@@ -164,16 +185,19 @@ src/onteater/
   core.cljs              entry point, mount, global services
   db.cljs                app-db schema + initial state
   events/, events.cljs   re-frame events (ontology, editing, history, mapping,
-                         chat, ollama, multi-provider LLM settings, persist) + registry
-  subs/, subs.cljs       re-frame subscriptions (ontology, scenario) + registry
+                         timeline, chat, ollama, multi-provider LLM settings,
+                         persist) + registry
+  subs/, subs.cljs       re-frame subscriptions (ontology, scenario, timeline) + registry
   model/graph.cljs       canonical ontology model + pure operations
   model/view.cljs        the anti-clutter "what's visible" view model
   model/mapping.cljs     mapping session model + operations
+  model/timeline.cljs    temporal/causal timeline model — ordering cascade,
+                         dependency cones, lane layout, gap report (pure, tested)
   format/{core,geo,native,owl}.cljs  format protocol + adapters (geo JSON, native JSON, OWL2 Turtle)
   llm/providers.cljs     pure provider adapters (request/response shapes for
                          Ollama, cloud vendors, Azure Gov)
   llm/{client,prompts}.cljs       provider-agnostic HTTP client + prompt engineering
-  viz/{common,graph,tree}.cljs    d3 rendering + layouts
+  viz/{common,graph,tree,timeline}.cljs  d3 rendering + layouts (incl. swimlane DAG)
   io/{file,export,idb}.cljs       file I/O, SVG/PNG export, autosave
   ui/*.cljs              views: shell, workspaces, panes, dialogs, chat, mascot
 build/inline.mjs         single-file packager
@@ -186,9 +210,15 @@ test/onteater/...        unit tests (incl. the golden round-trip)
 
 - `npm test` runs the headless unit suite, including the **golden round-trip** on the
   reference ontology (parse → serialize is byte-identical) — the hard gate the editing
-  features are built on.
+  features are built on — and the pure timeline core (ordering cascade, dependency
+  cones, lane layout, gap report).
 - `build/verify-*.mjs` are end-to-end checks against the built artifact in headless
-  Chromium (file:// boot, explore, edit+persist, live Ollama mapping and chat).
+  Chromium (file:// boot, explore, edit+persist, multi-provider settings, live Ollama
+  mapping and chat, and the timeline extraction/gap flow).
+- `build/eval-mapping.mjs` is an optional mapping-**quality** harness (metrics, not
+  pass/fail): it runs the real prompt pipeline against a live Ollama over the example
+  scenarios and reports invalid-target / excerpt-miss / shallow-typing rates per
+  strategy. `--report-only` needs no model and just prints prompt-size estimates.
 
 ## License
 

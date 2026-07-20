@@ -9,7 +9,9 @@
   'thinking…' placeholder is robust. Cancellation still works via AbortController."
   (:require [re-frame.core :as rf]
             [clojure.string :as str]
+            [clojure.set :as set]
             [onteater.model.mapping :as m]
+            [onteater.model.timeline :as tl]
             [onteater.llm.prompts :as prompts]
             [onteater.llm.providers :as providers]
             [onteater.events.mapping :refer [record-mapping]]))
@@ -56,7 +58,8 @@
              req        (providers/chat-request
                          cfg
                          {:messages messages
-                          :temperature (get-in db [:ollama :options :temperature] 0.2)})]
+                          :temperature (get-in db [:ollama :options :temperature] 0.2)
+                          :num-ctx (:num-ctx (prompts/messages-num-ctx messages))})]
          {:db (-> db (update-active update :chat (fnil into []) [user-msg asst-msg])
                   (assoc-in [:scenario :chat-input] ""))
           :llm/request (merge req
@@ -92,6 +95,18 @@
  (fn [db [_ text]] (assoc-in db [:scenario :chat-input] text)))
 
 ;; --- applying proposed ops --------------------------------------------------
+;; One diff-card pipeline serves BOTH mapping entries and timeline events/relations
+;; (§6.5): route by the op's :target. Forced items are untouchable client-side.
+
+(defn- op-forced-conflict? [sess op]
+  (case (:target op)
+    :entry (m/forced-op-conflict? sess op)
+    (tl/forced-op-conflict? (:timeline sess) op)))
+
+(defn- apply-op-to-session [sess op]
+  (case (:target op)
+    :entry (m/apply-op sess op)
+    (update sess :timeline #(tl/apply-op % op))))
 
 (defn- op-at [db msg-id ui-idx op-idx]
   (let [sess (active-session db)
@@ -110,11 +125,11 @@
          op   (op-at db msg-id ui-idx op-idx)]
      (cond
        (nil? op) {:db db}
-       (m/forced-op-conflict? sess op)
+       (op-forced-conflict? sess op)
        {:db (set-op-state db msg-id ui-idx op-idx :rejected)
-        :dispatch [:ui/push-toast {:kind :warn :text "That change touches a forced entry and was not applied."}]}
+        :dispatch [:ui/push-toast {:kind :warn :text "That change touches a forced item and was not applied."}]}
        :else
-       {:db (-> db (update-active m/apply-op op)
+       {:db (-> db (update-active apply-op-to-session op)
                 (set-op-state msg-id ui-idx op-idx :applied))}))))
 
 (rf/reg-event-fx
@@ -125,9 +140,9 @@
          msg  (first (filter #(= msg-id (:id %)) (:chat sess)))
          ops  (get-in msg [:updates ui-idx :ops])
          db'  (reduce (fn [d [i op]]
-                        (if (or (not= :pending (:state op)) (m/forced-op-conflict? (active-session d) op))
+                        (if (or (not= :pending (:state op)) (op-forced-conflict? (active-session d) op))
                           (set-op-state d msg-id ui-idx i :rejected)
-                          (-> d (update-active m/apply-op op) (set-op-state msg-id ui-idx i :applied))))
+                          (-> d (update-active apply-op-to-session op) (set-op-state msg-id ui-idx i :applied))))
                       db (map-indexed vector ops))]
      {:db db'})))
 
@@ -154,3 +169,48 @@
                   :unmapped "What significant scenario elements did you leave unmapped, and why?"
                   "")]
      {:dispatch [:chat/send prompt]})))
+
+;; Timeline-aware quick actions (§6.5). These are GROUNDED (§12.14): the app attaches
+;; the model-layer's *computed* cones/paths/gap data to the prompt, so the LLM narrates
+;; real structure instead of re-deriving graph structure from the raw text.
+(rf/reg-event-fx
+ :chat/timeline-action
+ (fn [{:keys [db]} [_ kind]]
+   (let [sess  (active-session db)
+         t     (:timeline sess)
+         eid   (get-in db [:scenario :tl-ui :selected-event])
+         e     (when eid (tl/event t eid))
+         label #(or (:label (tl/event t %)) %)
+         prompt
+         (case kind
+           :depends
+           (if e
+             (str "Using ONLY this computed dependency structure (do not infer new links), "
+                  "explain what the event “" (:label e) "” depends on and why it matters:\n"
+                  "Upstream (its ancestors, what it depended on): "
+                  (str/join ", " (map label (tl/ancestors t eid))) "\n"
+                  "Downstream (what depends on it): "
+                  (str/join ", " (map label (tl/descendants t eid))))
+             "Select an event on the timeline first, then ask again.")
+           :trace
+           (if e
+             (let [anc     (tl/ancestors t eid)
+                   sources (filter #(empty? (set/intersection anc (tl/ancestors t %))) anc)
+                   paths   (mapcat #(tl/paths-between t % eid) sources)]
+               (str "Trace the chain leading to “" (:label e) "”. Using ONLY these computed "
+                    "paths, narrate them in causal order:\n"
+                    (if (seq paths)
+                      (str/join "\n" (map (fn [p] (str/join " → " (map label p))) paths))
+                      "(this event has no upstream dependencies)")))
+             "Select an event on the timeline first, then ask again.")
+           :why-untyped
+           (if (and e (nil? (:node-id e)))
+             (str "The event “" (:label e) "” could not be typed against the ontology. The nearest "
+                  "abstract class recorded is " (:nearest e) ", with reason: " (:why-no-fit e)
+                  ". Explain the ontology gap this reveals and suggest a leaf class that would fill it.")
+             "Select an untyped (?) event on the timeline first, then ask again.")
+           "")]
+     (if (str/blank? prompt)
+       {}
+       {:db (assoc-in db [:scenario :chat-open?] true)
+        :dispatch [:chat/send prompt]}))))

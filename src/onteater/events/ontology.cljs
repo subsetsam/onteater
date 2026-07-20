@@ -44,22 +44,26 @@
        {:dispatch [:ui/error (or (:message (ex-data e)) (.-message e)
                                  "Could not parse this file.")]}))))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :ontology/load
  "Install a parsed model as the active ontology and reset the view to the
-  module overview."
- (fn [db [_ model file-info]]
-   (-> db
-       (assoc-in [:ontology :model] model)
-       (assoc-in [:ontology :file] (merge {:handle nil :hash nil} file-info))
-       (assoc-in [:ontology :dirty?] false)
-       (assoc-in [:ontology :selection] {:node nil :edge nil :pinned #{}})
-       (assoc-in [:ontology :view-spec] db/default-view-spec)
-       (assoc-in [:ontology :outline] {:query "" :filters {} :expanded #{}})
-       (assoc-in [:ontology :breadcrumbs] [])
-       (assoc-in [:ontology :undo] [])
-       (assoc-in [:ontology :redo] [])
-       (assoc :workspace :ontology))))
+  module overview. Drops the previous ontology's briefing and asks the mapping
+  layer to restore any persisted briefing for THIS ontology (keyed by
+  title+version in IndexedDB)."
+ (fn [{:keys [db]} [_ model file-info]]
+   {:db (-> db
+            (assoc-in [:ontology :model] model)
+            (assoc-in [:ontology :file] (merge {:handle nil :hash nil} file-info))
+            (assoc-in [:ontology :dirty?] false)
+            (assoc-in [:ontology :selection] {:node nil :edge nil :pinned #{}})
+            (assoc-in [:ontology :view-spec] db/default-view-spec)
+            (assoc-in [:ontology :outline] {:query "" :filters {} :expanded #{}})
+            (assoc-in [:ontology :breadcrumbs] [])
+            (assoc-in [:ontology :undo] [])
+            (assoc-in [:ontology :redo] [])
+            (update :ontology dissoc :briefing :briefing-run)
+            (assoc :workspace :ontology))
+    :dispatch [:briefing/load-persisted]}))
 
 ;; --- selection --------------------------------------------------------------
 

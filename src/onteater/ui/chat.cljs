@@ -10,13 +10,22 @@
 (defn- md [content]
   [:div.msg-md {:dangerouslySetInnerHTML #js {:__html (markdown/render-html (or content ""))}}])
 
-(defn- op-line [{:keys [op entry]}]
-  (let [verb (case op :add "add" :update "retarget" :remove "remove" (name op))]
+(defn- op-line [{:keys [op target value] :as o}]
+  ;; One diff-card renderer for entries AND timeline events/relations (§6.5).
+  (let [target (or target :entry)
+        verb   (case op :add "add" :update "update" :remove "remove" (name op))
+        v      (or value (:entry o))
+        [subject arrow-target]
+        (case target
+          :event    [(str "event “" (:label v) "”") (or (:node-id v) "(untyped)")]
+          :relation [(str "relation " (some-> (:type v) name)) (:property-id v)]
+          [(str "“" (:excerpt v) "”") (:node-id v)])]
     [:div.op-line
      [:span.op-verb {:class (str "op-" (name op))} verb]
-     [:span.op-excerpt (str "“" (:excerpt entry) "”")]
-     (when (not= :remove op)
-       [:<> [:span.op-arrow "→"] [:span.op-node (:node-id entry)]])]))
+     [:span.op-target-tag (name target)]
+     [:span.op-excerpt subject]
+     (when (and (not= :remove op) arrow-target)
+       [:<> [:span.op-arrow "→"] [:span.op-node arrow-target]])]))
 
 (defn- op-card [msg-id ui-idx op-idx {:keys [state] :as op}]
   [:div.op-card {:class (str "op-" (name (or state :pending)))}
@@ -51,11 +60,19 @@
         ^{:key ui-idx} [update-block id ui-idx u])])])
 
 (defn- quick-actions []
-  [:div.quick-actions
-   [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/quick-action :explain])} "Explain selection"]
-   [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/quick-action :alternatives])} "Alternatives"]
-   [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/quick-action :low-confidence])} "Re-examine low-conf"]
-   [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/quick-action :unmapped])} "What's unmapped?"]])
+  (let [tab @(rf/subscribe [:timeline/tab])]
+    [:div.quick-actions
+     (if (= :mapping (or tab :mapping))
+       [:<>
+        [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/quick-action :explain])} "Explain selection"]
+        [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/quick-action :alternatives])} "Alternatives"]
+        [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/quick-action :low-confidence])} "Re-examine low-conf"]
+        [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/quick-action :unmapped])} "What's unmapped?"]]
+       ;; Timeline/Gaps tabs: grounded dependency questions (§6.5 / §12.14).
+       [:<>
+        [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/timeline-action :depends])} "What does this depend on?"]
+        [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/timeline-action :trace])} "Trace the chain"]
+        [:button.chip.chip-sm {:on-click #(rf/dispatch [:chat/timeline-action :why-untyped])} "Why untyped?"]])]))
 
 (defn- composer []
   (let [input @(rf/subscribe [:chat/input])

@@ -169,6 +169,19 @@
     (:path (or (first (sort-by (comp pr-str :path) with-sub))
                (first (sort-by (comp pr-str :path) occurrences))))))
 
+(defn- prompt-notes
+  "Collect the ontology's own modeling-discipline prose for the LLM prompt layer
+  (`[:meta :prompt-notes]`): the spine discipline notes plus the natural-language
+  axiom statements (capped). Format-specific extraction lives HERE in the adapter
+  — prompts.cljs renders the strings verbatim and stays format-neutral."
+  [data]
+  (let [spine-notes (keep #(get-in data ["spine" %])
+                          ["role_discipline_note" "disposition_discipline_note"])
+        axioms      (->> (get-in data ["axioms" "axioms"])
+                         (keep #(get % "statement"))
+                         (take 10))]
+    (vec (remove str/blank? (concat spine-notes axioms)))))
+
 (defn- build-model [data raw-str]
   (let [occurrences (walk-occurrences data)
         by-id       (group-by (comp #(get % "id") :raw) occurrences)
@@ -259,11 +272,13 @@
          {}
          occurrences)]
 
-    {:meta   {:title      (get-in data ["metadata" "title"] "Untitled ontology")
-              :version    (get-in data ["metadata" "version"])
-              :namespaces (get data "namespaces" {})
-              :format     :geo-reference-json
-              :onteater/geo {:node-index node-index}}
+    {:meta   (let [notes (prompt-notes data)]
+               (cond-> {:title      (get-in data ["metadata" "title"] "Untitled ontology")
+                        :version    (get-in data ["metadata" "version"])
+                        :namespaces (get data "namespaces" {})
+                        :format     :geo-reference-json
+                        :onteater/geo {:node-index node-index}}
+                 (seq notes) (assoc :prompt-notes notes)))
      :nodes  nodes
      :edges  edges
      :groups groups

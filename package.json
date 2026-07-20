@@ -1,6 +1,6 @@
 {
   "name": "onteater",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "description": "Offline-first single-HTML ontology visualization, exploration, editing, and LLM-assisted scenario mapping.",
   "scripts": {
@@ -9,7 +9,8 @@
     "release": "shadow-cljs release app",
     "test": "shadow-cljs compile test && node target/test.js",
     "inline": "node build/inline.mjs",
-    "build": "shadow-cljs release app && node build/inline.mjs"
+    "sync-version": "node build/sync-version.mjs",
+    "build": "npm run sync-version && shadow-cljs release app && node build/inline.mjs"
   },
   "dependencies": {
     "create-react-class": "^15.7.0",

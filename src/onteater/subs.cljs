@@ -9,7 +9,8 @@
             [clojure.string :as str]
             [onteater.llm.providers :as providers]
             [onteater.subs.ontology]     ; ontology + view subscriptions
-            [onteater.subs.scenario]))   ; scenario mapping subscriptions
+            [onteater.subs.scenario]     ; scenario mapping subscriptions
+            [onteater.subs.timeline]))   ; temporal-mapping (timeline) subscriptions
 
 (rf/reg-sub :app/workspace (fn [db _] (:workspace db)))
 

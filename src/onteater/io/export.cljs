@@ -29,7 +29,7 @@
               (.setProperty (.-style d) p v))))))))
 
 (defn- content-bbox [svg]
-  (if-let [root (.querySelector svg ".viz-root")]
+  (if-let [root (or (.querySelector svg ".viz-root") (.querySelector svg ".tl-root"))]
     (let [b (.getBBox root)]
       {:x (- (.-x b) 30) :y (- (.-y b) 30)
        :w (+ (.-width b) 60) :h (+ (.-height b) 90)}) ; extra bottom room for caption
@@ -73,9 +73,11 @@
      (pick fg "--text-muted" "#5c6673")]))
 
 (defn- build-svg-string
-  "Clone the live canvas into a self-contained SVG string framed to `bbox`."
-  [{:keys [caption bg fg]}]
-  (when-let [svg (.querySelector js/document ".graph-canvas")]
+  "Clone the live canvas into a self-contained SVG string framed to `bbox`. The
+  `:selector` chooses which live <svg> to export (default the ontology graph canvas;
+  the timeline view passes `.tl-canvas`)."
+  [{:keys [caption bg fg selector]}]
+  (when-let [svg (.querySelector js/document (or selector ".graph-canvas"))]
     (let [[bg fg] (theme-colors bg fg)
           clone (.cloneNode svg true)
           bbox  (content-bbox svg)]

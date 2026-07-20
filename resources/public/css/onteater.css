@@ -482,7 +482,10 @@ h1, h2, h3 { margin: 0 0 0.4em; font-weight: 600; }
 
 /* ---- scenario pane ---- */
 .scenario-pane { display: flex; flex-direction: column; height: 100%; }
-.scenario-toolbar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+/* position: relative anchors the briefing dropdown to the toolbar (i.e. the full
+   scenario-pane width), so the panel's right edge sits at the pane/board divider
+   instead of hanging off its mid-toolbar chip. */
+.scenario-toolbar { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
 .seg-toggle { display: inline-flex; gap: 2px; background: var(--bg-sunken); padding: 2px; border-radius: var(--radius-sm); }
 .scenario-body { flex: 1; overflow-y: auto; min-height: 0; }
 .scenario-input { width: 100%; height: 100%; border: none; resize: none; padding: 18px 22px; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; }
@@ -620,6 +623,9 @@ mark.excerpt-selected { background: var(--accent-weak); }
  * Milestone 7 — help / about modal
  * ========================================================================== */
 .help-dialog { max-width: 760px; width: 92%; }
+.help-body { min-height: 320px; margin-top: 14px; }
+.help-body > h4:first-child { margin-top: 0; }
+.help-body h4 { margin: 14px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-faint); }
 .help-lede { color: var(--text-muted); margin: 4px 0 14px; }
 .help-cols { display: flex; gap: 26px; flex-wrap: wrap; }
 .help-col { flex: 1; min-width: 250px; }
@@ -634,3 +640,128 @@ mark.excerpt-selected { background: var(--accent-weak); }
 .help-note code, .help-pre { font-family: var(--mono); }
 .help-pre { background: var(--bg-sunken); padding: 9px 11px; border-radius: var(--radius-sm); font-size: 12px; overflow-x: auto; }
 .help-about { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 16px 0 4px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-faint); }
+
+/* ============================================================================
+   Timeline (temporal mapping) — swimlane DAG view, gap report, center tabs.
+   Shares the module palette + tokens so it reads as one system with the graph. */
+
+/* --- center-pane tabs (Mapping | Timeline | Gaps) ------------------------- */
+.center-pane { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.center-tabbar { display: flex; gap: 2px; padding: 6px 10px 0; border-bottom: 1px solid var(--border); background: var(--bg-panel); }
+.center-tab { border: none; background: transparent; color: var(--text-muted); padding: 7px 14px; font-size: 13px; border-radius: 6px 6px 0 0; cursor: pointer; position: relative; }
+.center-tab:hover { color: var(--text); }
+.center-tab-active { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); font-weight: 600; }
+.center-tab-badge { display: inline-block; margin-left: 6px; min-width: 16px; padding: 0 5px; font-size: 11px; line-height: 16px; text-align: center; border-radius: 8px; background: var(--warn); color: #fff; }
+.center-tab-body { flex: 1; min-height: 0; overflow-y: auto; }
+
+/* --- timeline tab layout -------------------------------------------------- */
+.tl-tab { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.tl-toolbar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.tl-run { display: flex; align-items: center; gap: 8px; }
+.run-note { font-size: 12px; color: var(--text-muted); }
+.tl-body { flex: 1; min-height: 0; display: flex; }
+.tl-canvas-wrap { flex: 1; min-width: 0; overflow: auto; background: var(--bg-panel); }
+.tl-side { width: 280px; flex-shrink: 0; border-left: 1px solid var(--border); overflow-y: auto; padding: 10px; background: var(--bg-sunken); }
+.tl-empty { padding: 28px 20px; color: var(--text-muted); font-size: 14px; line-height: 1.5; max-width: 46ch; }
+
+/* --- swimlane svg --------------------------------------------------------- */
+.tl-canvas { display: block; }
+.tl-lane { fill: transparent; }
+.tl-lane-alt { fill: var(--bg-sunken); fill-opacity: 0.5; }
+.tl-lane-label { fill: var(--text-muted); font-size: 12px; font-family: system-ui, sans-serif; cursor: pointer; }
+.tl-lane-label:hover { fill: var(--text); }
+.tl-axis-line { stroke: var(--border-strong); stroke-width: 1; }
+.tl-tick { stroke-width: 1; }
+.tl-tick-metric { stroke: var(--border-strong); }
+.tl-tick-ordinal { stroke: var(--text-faint); stroke-dasharray: 2 2; }
+.tl-tick-label { fill: var(--text-faint); font-size: 10px; font-family: system-ui, sans-serif; text-anchor: middle; }
+
+.tl-event { cursor: pointer; }
+.tl-glyph-mark { stroke-width: 2; }
+.tl-glyph-q { fill: var(--warn); font-size: 13px; font-weight: 700; font-family: system-ui, sans-serif; }
+.tl-glyph-lock { font-size: 10px; }
+.tl-glyph-label { fill: var(--text); font-size: 11px; font-family: system-ui, sans-serif; }
+.tl-event.tl-selected .tl-glyph-mark { stroke: var(--accent); stroke-width: 3.5; }
+.tl-event.tl-cycle .tl-glyph-mark { stroke-dasharray: 3 2; }
+.tl-dimmed { opacity: 0.15; }
+.tl-cone-focus .tl-glyph-mark { stroke: var(--accent); stroke-width: 3.5; }
+.tl-cone-up .tl-glyph-label { fill: var(--accent); }
+.tl-cone-down .tl-glyph-label { fill: #1baf7a; }
+
+.tl-edge { fill: none; stroke-width: 1.6; }
+.tl-edge-causal { stroke: var(--text-muted); }
+.tl-edge-temporal { stroke: var(--text-faint); stroke-dasharray: 4 3; }
+.tl-edge-response { stroke: #4a3aa7; stroke-width: 2; }
+.tl-edge-untyped { stroke: var(--warn); stroke-dasharray: 5 3; }
+.tl-edge-forced { stroke-width: 2.4; }
+.tl-arrowhead { fill: var(--text-muted); }
+.tl-container { fill: var(--accent-weak); fill-opacity: 0.35; stroke: var(--border-strong); stroke-dasharray: 4 3; }
+
+/* --- timeline side panels ------------------------------------------------- */
+.tl-detail, .tl-cone-panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; }
+.tl-detail h4, .tl-cone-panel h4 { margin: 0 0 6px; font-size: 13px; }
+.tl-detail-excerpt { font-size: 12px; color: var(--text-muted); font-style: italic; margin: 4px 0; }
+.tl-gap-note { background: var(--bg-sunken); border-left: 3px solid var(--warn); padding: 8px; border-radius: 4px; margin: 6px 0; font-size: 13px; }
+.tl-why { color: var(--text-muted); font-size: 12px; margin: 4px 0 6px; }
+.tl-participants { margin: 8px 0; }
+.tl-participant { display: flex; gap: 6px; align-items: center; font-size: 12px; padding: 2px 0; }
+.tl-part-entity { font-weight: 600; }
+.tl-part-role { color: var(--text-muted); }
+.tl-part-unroled { color: var(--warn); }
+.tl-cone-counts { display: flex; gap: 12px; font-size: 12px; margin-bottom: 6px; }
+.tl-cone-up { color: var(--accent); }
+.tl-cone-down { color: #1baf7a; }
+.tl-paths { margin: 6px 0; }
+.tl-path { font-size: 12px; color: var(--text); background: var(--bg-sunken); padding: 4px 6px; border-radius: 4px; margin: 3px 0; line-height: 1.4; }
+
+.tl-matrix-wrap { margin-top: 8px; }
+.tl-matrix { border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+.tl-matrix th, .tl-matrix td { border: 1px solid var(--border); padding: 2px 5px; text-align: center; }
+.tl-matrix-col, .tl-matrix-row { color: var(--text-muted); font-weight: 500; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-matrix-cell { cursor: pointer; min-width: 22px; }
+
+/* --- gaps tab ------------------------------------------------------------- */
+.gaps-tab { padding: 12px 14px; }
+.gaps-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.gaps-title { font-size: 15px; font-weight: 600; }
+.gap-count-total { margin-left: 8px; font-size: 12px; color: var(--text-muted); }
+.gaps-cleared { background: var(--accent-weak); color: var(--accent); padding: 6px 10px; border-radius: 4px; font-size: 13px; margin-bottom: 10px; }
+.gap-group { margin-bottom: 16px; }
+.gap-group-head { font-size: 13px; margin: 0 0 6px; display: flex; align-items: center; gap: 6px; }
+.gap-count { font-size: 11px; color: var(--text-muted); background: var(--bg-sunken); padding: 0 6px; border-radius: 8px; }
+.gap-nearest-group { margin-bottom: 8px; }
+.gap-nearest { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.gap-nearest code { background: var(--bg-sunken); padding: 1px 5px; border-radius: 3px; }
+.gap-card { background: var(--bg-panel); border: 1px solid var(--border); border-left: 3px solid var(--warn); border-radius: 4px; padding: 8px 10px; margin: 4px 0; }
+.gap-card-main { display: flex; align-items: center; gap: 8px; }
+.gap-label { font-weight: 600; font-size: 13px; }
+.gap-glyph { color: var(--warn); font-weight: 700; margin-left: auto; }
+.gap-why { color: var(--text-muted); font-size: 12px; margin: 4px 0 6px; }
+.gap-in { color: var(--text-muted); font-size: 12px; margin-left: 6px; }
+.gap-coverage { margin-top: 16px; }
+.gap-cov-row { display: flex; align-items: center; gap: 10px; margin: 5px 0; font-size: 12px; }
+.gap-cov-label { width: 140px; color: var(--text-muted); }
+.gap-cov-track { flex: 1; height: 8px; background: var(--bg-sunken); border-radius: 4px; overflow: hidden; }
+.gap-cov-fill { height: 100%; background: var(--accent); }
+.gap-cov-num { width: 48px; text-align: right; color: var(--text-muted); }
+
+/* --- add-node (draft-from-gap) dialog ------------------------------------- */
+.add-node-dialog { min-width: 380px; }
+.dialog-field { display: block; font-size: 12px; color: var(--text-muted); margin: 8px 0; }
+.dialog-field .insp-input { display: block; width: 100%; margin-top: 3px; }
+
+/* --- chat op target tag --------------------------------------------------- */
+.op-target-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-faint); background: var(--bg-sunken); padding: 0 4px; border-radius: 3px; }
+
+/* ---- ontology briefing (curated LLM guidance injected into mapping prompts) ---- */
+.briefing-wrap { display: contents; }
+.briefing-panel { position: absolute; right: 8px; top: calc(100% + 4px); z-index: 60; width: 460px; max-width: calc(100% - 16px);
+                  display: flex; flex-direction: column; gap: 8px; padding: 10px;
+                  background: var(--bg-elevated); border: 1px solid var(--border);
+                  border-radius: var(--radius); box-shadow: var(--shadow); }
+.briefing-panel .hint { margin: 0; font-size: 12px; color: var(--text-muted); }
+.briefing-panel .hint.error { color: var(--danger, #c0392b); }
+.briefing-input { width: 100%; min-height: 240px; resize: vertical; padding: 8px;
+                  background: var(--bg-sunken); color: var(--text); border: 1px solid var(--border);
+                  border-radius: var(--radius-sm); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                  font-size: 12px; line-height: 1.5; }

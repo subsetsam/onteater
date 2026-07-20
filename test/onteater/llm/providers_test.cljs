@@ -196,6 +196,20 @@
     (testing "enum retained verbatim"
       (is (= prompts/relation-enum (get-in entry [:properties :relation :enum]))))))
 
+(deftest strictify-schema-drops-oversized-enums
+  ;; mapping-schema's node_id enum can list every ontology id — llama.cpp
+  ;; grammar handles that, but OpenAI/Azure strict mode caps enum size and 400s
+  ;; the request. strictify must drop the big enum (validate-entries backstops)
+  ;; while keeping small ones like relation-enum.
+  (let [big  (mapv #(str "geo:Node" %) (range 400))
+        s    (p/strictify-schema {:type "object"
+                                  :properties {:node_id {:type "string" :enum big}
+                                               :relation {:type "string"
+                                                          :enum prompts/relation-enum}}})]
+    (is (nil? (get-in s [:properties :node_id :enum])))
+    (is (= "string" (get-in s [:properties :node_id :type])))
+    (is (= prompts/relation-enum (get-in s [:properties :relation :enum])))))
+
 ;; --- ready? -----------------------------------------------------------------------
 
 (deftest ready?-flags-missing-fields

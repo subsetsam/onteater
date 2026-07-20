@@ -73,7 +73,7 @@
 
 (defn- help-menu []
   [menu :help "Help"
-   [{:label "Keyboard shortcuts" :shortcut "?" :on-click #(rf/dispatch [:ui/help-toggle])}
+   [{:label "Usage" :shortcut "?" :on-click #(rf/dispatch [:ui/help-toggle])}
     {:divider? true}
     {:label "About Onteater" :on-click #(rf/dispatch [:ui/open-dialog {:kind :about}])}]])
 

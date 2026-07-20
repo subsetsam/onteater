@@ -51,6 +51,10 @@
    :model        model
    :entries      []
    :chat         []
+   ;; Temporal mapping (onteater.model.timeline). Kept inline (rather than
+   ;; requiring the timeline ns) so the session model has no upward dependency; the
+   ;; timeline ns operates on this `{:events :relations}` map.
+   :timeline     {:events [] :relations []}
    :unmapped     {:scenario-elements [] :notes nil}})
 
 (defn new-entry
@@ -192,26 +196,37 @@
 
 (defn- entry-key [e] [(str/trim (str (:excerpt e))) (:node-id e)])
 
+(def curated-statuses
+  "Statuses that record a user decision — these entries survive a new mapping run
+  and always win over an incoming LLM duplicate."
+  #{:forced :accepted :rejected})
+
 (defn merge-entries
   "Merge a freshly-parsed set of `incoming` entries into `existing`, de-duping by
-  (excerpt, node-id). Existing forced/accepted/rejected entries are preserved and
-  win over an incoming duplicate (the user's decisions are never overwritten by a
-  new run). Returns the merged vector."
+  (excerpt, node-id). EVERY existing entry is preserved — chunks of one run
+  accumulate — and an incoming duplicate of any existing entry is dropped, so the
+  user's curated decisions are never overwritten. Stale proposals from a previous
+  run are cleared once at run start (`clear-proposed`), not here. Returns the
+  merged vector."
   [existing incoming]
-  (let [existing-by-key (into {} (map (juxt entry-key identity)) existing)
-        curated? #{:forced :accepted :rejected}
-        keep-existing (fn [k] (when-let [e (existing-by-key k)]
-                                (when (curated? (:status e)) e)))]
+  (let [existing-keys (into #{} (map entry-key) existing)]
     (->> incoming
          (reduce (fn [{:keys [acc seen]} e]
                    (let [k (entry-key e)]
-                     (cond
-                       (seen k) {:acc acc :seen seen}
-                       (keep-existing k) {:acc acc :seen (conj seen k)} ; curated dup kept below
-                       :else {:acc (conj acc (new-entry e)) :seen (conj seen k)})))
+                     (if (or (seen k) (existing-keys k))
+                       {:acc acc :seen seen}
+                       {:acc (conj acc (new-entry e)) :seen (conj seen k)})))
                  {:acc [] :seen #{}})
          :acc
-         (into (vec (filter #(curated? (:status %)) existing))))))
+         (into (vec existing)))))
+
+(defn clear-proposed
+  "Drop all non-curated entries from the session — a new mapping run replaces
+  stale proposals, while forced/accepted/rejected entries (the user's decisions)
+  survive and constrain the run."
+  [session]
+  (update session :entries
+          (fn [es] (vec (filter #(curated-statuses (:status %)) es)))))
 
 ;; --- chat-driven mapping updates --------------------------------
 
@@ -267,9 +282,36 @@
    (clj->js (walk/postwalk #(if (uuid? %) (str %) %) session))
    nil 2))
 
+(defn- restore-event
+  "Re-keywordize a timeline event after JSON round-trip (clj->js stringified its
+  keyword values and turned its flag-set into an array). `:node-id`/`:nearest` stay
+  strings (or nil, a valid untyped gap)."
+  [e]
+  (cond-> e
+    (:status e) (update :status keyword)
+    true        (update :flags #(set (map keyword %)))
+    (:when e)   (update :when (fn [w] (cond-> w
+                                        (:kind w)      (update :kind keyword)
+                                        (:precision w) (update :precision keyword))))
+    (:history e) (update :history (fn [hs] (mapv restore-event hs)))))
+
+(defn- restore-relation [r]
+  (cond-> r
+    (:type r)   (update :type keyword)
+    (:status r) (update :status keyword)
+    true        (update :flags #(set (map keyword %)))
+    (:history r) (update :history (fn [hs] (mapv restore-relation hs)))))
+
 (defn json->session
   "Parse a *.onteater-mapping.json string back into a session (ids stay strings —
-  they are only used for identity)."
+  they are only used for identity). Restores entry, chat, and timeline keyword
+  fields. Sessions written before the timeline feature simply have no `:timeline`
+  key — they load unchanged (no migration needed)."
   [s]
   (let [data (js->clj (js/JSON.parse s) :keywordize-keys true)]
-    (update data :entries #(mapv restore-entry %))))
+    (-> data
+        (update :entries #(mapv restore-entry %))
+        (update :timeline (fn [t]
+                            (-> (or t {:events [] :relations []})
+                                (update :events #(mapv restore-event (or % [])))
+                                (update :relations #(mapv restore-relation (or % [])))))))))
