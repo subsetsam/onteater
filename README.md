@@ -25,7 +25,11 @@ KaTeX), compiled with shadow-cljs.
   focused neighbourhoods (four layouts: clustered, force, tidy tree, radial),
   search and filter, edit any attribute, add/delete nodes and relations, undo/redo,
   and save. Edits to a source file land **in place**; the rest of the file is left
-  byte-for-byte untouched.
+  byte-for-byte untouched. The center pane toggles between the **Graph** view and a
+  **Docs** view — the ontology's prose documentation (worked examples, design
+  decisions, revision notes, governance, metadata) shown as an accordion and edited
+  in place by one generic structured editor, every change undoable and round-tripped
+  back into the file on save.
 - **Scenario** — paste or upload a scenario (Markdown + LaTeX math), pick a model
   (local Ollama, a cloud provider, or an Azure Gov deployment), and map its
   elements onto the ontology. Every mapping is validated against
@@ -35,6 +39,10 @@ KaTeX), compiled with shadow-cljs.
   tabbed into three linked views over one session:
   - **Mapping** — the entry board: scenario excerpts typed onto ontology classes,
     each accept/reject/force-able and highlighted back in the scenario text.
+    Optionally generate an **ontology briefing** first — a one-time LLM pass over
+    the loaded ontology that produces module summaries and disambiguation rules,
+    which you can edit and which are then injected into every mapping prompt to
+    tune extraction to *this* ontology.
   - **Timeline** — a second extraction pass lifts the mapped elements into a
     temporal/causal graph: dated **events** ordered by a date → dependency →
     narrative cascade, linked by *precedes / causes / enables / responds-to /
@@ -185,7 +193,7 @@ src/onteater/
   core.cljs              entry point, mount, global services
   db.cljs                app-db schema + initial state
   events/, events.cljs   re-frame events (ontology, editing, history, mapping,
-                         timeline, chat, ollama, multi-provider LLM settings,
+                         timeline, docs, chat, ollama, multi-provider LLM settings,
                          persist) + registry
   subs/, subs.cljs       re-frame subscriptions (ontology, scenario, timeline) + registry
   model/graph.cljs       canonical ontology model + pure operations
@@ -193,6 +201,7 @@ src/onteater/
   model/mapping.cljs     mapping session model + operations
   model/timeline.cljs    temporal/causal timeline model — ordering cascade,
                          dependency cones, lane layout, gap report (pure, tested)
+  model/docs.cljs        ontology documentation tree — generic structured editor ops
   format/{core,geo,native,owl}.cljs  format protocol + adapters (geo JSON, native JSON, OWL2 Turtle)
   llm/providers.cljs     pure provider adapters (request/response shapes for
                          Ollama, cloud vendors, Azure Gov)
