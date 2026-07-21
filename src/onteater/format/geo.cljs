@@ -37,10 +37,23 @@
   Serialisation of an *edited* model mutates the re-parsed JS object tree in place
   (via goog.object) purely so key order is preserved for clean diffs; this is
   local to `serialize`, has no external side effects, and is the one considered
-  exception to the domain layer's \"CLJS data only\" preference."
+  exception to the domain layer's \"CLJS data only\" preference. Documentation
+  sections (`:docs`) are the other place key order matters, so they are read off
+  the JS tree into `onteater.model.docs` tagged trees at parse time.
+
+  ## Documentation sections
+
+  Prose sections (`metadata`, `worked_examples`, `design_decisions`,
+  `revision_notes`, `governance`, `axioms.axioms`, …) become editable `:docs`
+  sections. A section is any top-level key with no node occurrences beneath it,
+  or — for mixed node/prose objects like `spine` and `axioms` — any node-free
+  child one level down. Sections therefore never overlap node objects, so docs
+  patches and node patches cannot collide. Changed sections are written back by
+  replacing their subtree in the JS tree (an existing key keeps its position)."
   (:require [clojure.string :as str]
             [goog.object :as gobj]
             [onteater.model.graph :as g]
+            [onteater.model.docs :as docs]
             [onteater.format.core :as fmt]))
 
 ;; ---------------------------------------------------------------------------
@@ -66,7 +79,9 @@
 ;; ---------------------------------------------------------------------------
 
 (defn- node-object?
-  "An object is a node iff it carries both `id` and `kind` strings."
+  "An object is a node iff it carries both `id` and `kind` strings. Do NOT
+  loosen this to `id` alone: docs items (worked examples, axiom statements)
+  carry `id` without `kind` and must stay prose, not become graph nodes."
   [m]
   (and (map? m) (string? (get m "id")) (string? (get m "kind"))))
 
@@ -182,7 +197,43 @@
                          (take 10))]
     (vec (remove str/blank? (concat spine-notes axioms)))))
 
-(defn- build-model [data raw-str]
+(def ^:private non-docs-keys
+  "Top-level keys that never become docs sections: structural data already
+  parsed into `:meta`."
+  #{"namespaces"})
+
+(defn- docs-sections
+  "Split the file's prose into editable docs sections, reading off the JS tree
+  so key order survives (see ns docstring). A top-level key with no node
+  occurrences beneath it is one whole-subtree section; a mixed node/prose
+  object contributes each node-free child as a `[k child]` section (one level
+  only — deeper prose inside `modules` is deliberately left alone). Returns an
+  ordered vector of {:path [seg...] :value <docs tree>}."
+  [js-root occurrences]
+  (let [node-paths (mapv :path occurrences)
+        node-under? (fn [prefix]
+                      (let [n (count prefix)]
+                        (some #(and (<= n (count %)) (= prefix (subvec % 0 n)))
+                              node-paths)))]
+    (vec
+     (mapcat
+      (fn [k]
+        (let [v (gobj/get js-root k)]
+          (cond
+            (non-docs-keys k) []
+
+            (not (node-under? [k]))
+            [{:path [k] :value (docs/js->tree v)}]
+
+            (and (some? v) (object? v) (not (array? v)))
+            (for [c (js/Object.keys v)
+                  :when (not (node-under? [k c]))]
+              {:path [k c] :value (docs/js->tree (gobj/get v c))})
+
+            :else [])))
+      (js/Object.keys js-root)))))
+
+(defn- build-model [data js-root raw-str]
   (let [occurrences (walk-occurrences data)
         by-id       (group-by (comp #(get % "id") :raw) occurrences)
 
@@ -270,18 +321,26 @@
                                          (update :members (fn [m] (if (some #{id} m) m (conj m id)))))))))
                gs)))
          {}
-         occurrences)]
+         occurrences)
+
+        ;; --- docs (editable prose sections) ---
+        sections (docs-sections js-root occurrences)]
 
     {:meta   (let [notes (prompt-notes data)]
                (cond-> {:title      (get-in data ["metadata" "title"] "Untitled ontology")
                         :version    (get-in data ["metadata" "version"])
                         :namespaces (get data "namespaces" {})
                         :format     :geo-reference-json
-                        :onteater/geo {:node-index node-index}}
+                        ;; docs-index is a vector of sections (not a path->tree
+                        ;; map): vector map-keys would not survive the native
+                        ;; format's key encoding.
+                        :onteater/geo {:node-index node-index
+                                       :docs-index sections}}
                  (seq notes) (assoc :prompt-notes notes)))
      :nodes  nodes
      :edges  edges
      :groups groups
+     :docs   sections
      :residual raw-str
      :order  (vec (keys real-nodes))}))
 
@@ -289,14 +348,15 @@
   "Parse a geo JSON string into a canonical model. Throws a user-readable ex-info
   on malformed JSON."
   [raw-str]
-  (let [data (try (js->clj (js/JSON.parse raw-str) :keywordize-keys false)
-                  (catch :default e
-                    (throw (ex-info "This file is not valid JSON."
-                                    {:message (str "JSON parse error: " (.-message e))}))))]
+  (let [js-root (try (js/JSON.parse raw-str)
+                     (catch :default e
+                       (throw (ex-info "This file is not valid JSON."
+                                       {:message (str "JSON parse error: " (.-message e))}))))
+        data    (js->clj js-root :keywordize-keys false)]
     (when-not (map? data)
       (throw (ex-info "Expected a JSON object at the top level."
                       {:message "This does not look like a geo ontology file."})))
-    (build-model data raw-str)))
+    (build-model data js-root raw-str)))
 
 ;; ---------------------------------------------------------------------------
 ;; Serialize — diff the current model against the parse-time index
@@ -395,21 +455,64 @@
       (when (and arr (js/Array.isArray arr))
         (.push arr (node->js clean (g/parents model (:id node))))))))
 
+(defn- docs-plan
+  "Diff current `:docs` sections vs the parse-time docs-index. Returns
+  {:sets [{:path :tree}] :removes [path ...]} — a changed or new section is a
+  set, a section missing from the model is a remove."
+  [model]
+  (let [index   (into {} (map (juxt :path :value))
+                      (get-in model [:meta :onteater/geo :docs-index]))
+        current (into #{} (map :path) (:docs model))]
+    {:sets    (vec (for [{:keys [path value]} (:docs model)
+                         :when (not= value (get index path))]
+                     {:path path :tree value}))
+     :removes (vec (remove current (keys index)))}))
+
+(defn- empty-docs-plan? [{:keys [sets removes]}]
+  (and (empty? sets) (empty? removes)))
+
+(defn- apply-docs!
+  "Write docs changes into the JS tree: removes drop the key, sets replace the
+  subtree in place (an existing key keeps its position; new keys append).
+  Removes run first so a section re-added under a removed parent recreates it."
+  [root {:keys [sets removes]}]
+  (doseq [path removes]
+    (when-let [parent (js-get-in root (butlast path))]
+      (gobj/remove parent (last path))))
+  (doseq [{:keys [path tree]} sets]
+    (let [parent-path (vec (butlast path))
+          parent      (or (js-get-in root parent-path)
+                          (when (seq parent-path)
+                            (let [o (js-obj)]
+                              (gobj/set root (first parent-path) o)
+                              o)))]
+      (when parent
+        (gobj/set parent (last path) (docs/tree->js tree))))))
+
 (defn serialize-model
   "Serialise `model` back to geo JSON. Byte-identical to the source when nothing
   changed; otherwise a minimal in-place patch of the original text."
   [model]
   (let [raw-str (:residual model)
-        plan    (compute-plan model)]
-    (if (or (nil? raw-str) (empty-plan? plan))
-      (or raw-str
-          ;; No residual (e.g. a geo model authored from scratch): emit a fresh skeleton.
-          (js/JSON.stringify (clj->js {"metadata" {"title" (get-in model [:meta :title])}
-                                       "spine" {"classes" []}}) nil 2))
+        plan    (compute-plan model)
+        dplan   (docs-plan model)]
+    (cond
+      ;; No residual (e.g. a geo model authored from scratch): emit a fresh skeleton.
+      (nil? raw-str)
+      (let [root (clj->js {"metadata" {"title" (get-in model [:meta :title])}
+                           "spine" {"classes" []}})]
+        (apply-docs! root dplan)
+        (js/JSON.stringify root nil 2))
+
+      (and (empty-plan? plan) (empty-docs-plan? dplan))
+      raw-str
+
+      :else
       (let [root (js/JSON.parse raw-str)]
         (doseq [p (:patches plan)] (apply-patch! root p))
         (apply-deletes! root (:deletes plan))
         (apply-adds! root model (:adds plan))
+        (apply-docs! root dplan)
         (js/JSON.stringify root nil 2)))))
 
 ;; ---------------------------------------------------------------------------

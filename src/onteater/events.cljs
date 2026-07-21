@@ -14,6 +14,7 @@
             [onteater.events.ontology]     ; ontology + view + file events
             [onteater.events.history]      ; undo/redo interceptor + events
             [onteater.events.editing]      ; model mutation events
+            [onteater.events.docs]         ; documentation-section events
             [onteater.events.persist]      ; save/export/autosave events
             [onteater.events.ollama]       ; ollama settings + connection events
             [onteater.events.providers]    ; cloud/Azure-Gov provider settings events

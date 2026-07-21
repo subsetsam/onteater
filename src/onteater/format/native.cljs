@@ -70,13 +70,14 @@
 (defn serialize-model
   "Serialise the whole canonical model to native JSON text (2-space indent)."
   [model]
-  (let [payload {"onteater/format-version" format-version
-                 "meta"     (encode (:meta model))
-                 "nodes"    (encode (:nodes model))
-                 "edges"    (encode (:edges model))
-                 "groups"   (encode (:groups model))
-                 "residual" (:residual model)
-                 "order"    (encode (vec (:order model)))}]
+  (let [payload (cond-> {"onteater/format-version" format-version
+                         "meta"     (encode (:meta model))
+                         "nodes"    (encode (:nodes model))
+                         "edges"    (encode (:edges model))
+                         "groups"   (encode (:groups model))
+                         "residual" (:residual model)
+                         "order"    (encode (vec (:order model)))}
+                  (:docs model) (assoc "docs" (encode (:docs model))))]
     (js/JSON.stringify (clj->js payload) nil 2)))
 
 (defn parse-str
@@ -90,12 +91,13 @@
     (when-not (and (map? data) (contains? data "onteater/format-version"))
       (throw (ex-info "Not an Onteater native file."
                       {:message "Missing onteater/format-version header."})))
-    {:meta     (decode (get data "meta"))
-     :nodes    (decode (get data "nodes"))
-     :edges    (decode (get data "edges"))
-     :groups   (decode (get data "groups"))
-     :residual (get data "residual")
-     :order    (decode (get data "order" []))}))
+    (cond-> {:meta     (decode (get data "meta"))
+             :nodes    (decode (get data "nodes"))
+             :edges    (decode (get data "edges"))
+             :groups   (decode (get data "groups"))
+             :residual (get data "residual")
+             :order    (decode (get data "order" []))}
+      (contains? data "docs") (assoc :docs (decode (get data "docs"))))))
 
 (defn detect-str
   "Confidence that `raw-str` is an Onteater native file — decisive on the header."

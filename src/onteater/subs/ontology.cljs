@@ -125,6 +125,39 @@
             (sort-by :label)
             vec)))))
 
+;; --- documentation sections (Docs center-pane view) --------------------------
+
+(rf/reg-sub
+ :ontology/center-view
+ (fn [db _] (get-in db [:ontology :center-view] :graph)))
+
+(rf/reg-sub :docs/expanded (fn [db _] (get-in db [:ontology :docs-ui :expanded] #{})))
+
+;; Docs sections grouped by their top-level key, in file order. A group whose
+;; sections sit one level down (path length 2) came from a mixed node/prose
+;; object — flagged :mixed? so the UI can hint that its classes are edited in
+;; the Graph view.
+(rf/reg-sub
+ :docs/groups
+ :<- [:ontology/model]
+ (fn [model _]
+   (when model
+     (->> (:docs model)
+          (partition-by (comp first :path))
+          (mapv (fn [sections]
+                  {:key      (first (:path (first sections)))
+                   :mixed?   (some #(= 2 (count (:path %))) sections)
+                   :sections (vec sections)}))))))
+
+;; Only formats whose serializer writes docs back may grow new sections (an OWL
+;; save would silently drop them).
+(rf/reg-sub
+ :docs/editable?
+ :<- [:ontology/model]
+ (fn [model _]
+   (contains? #{:geo-reference-json :onteater-native}
+              (get-in model [:meta :format]))))
+
 ;; --- theme resolution -------------------------------------------------------
 
 (rf/reg-sub :ui/theme-pref (fn [db _] (get-in db [:ui :theme])))

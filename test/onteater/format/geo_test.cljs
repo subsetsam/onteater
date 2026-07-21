@@ -7,6 +7,7 @@
   (:require [cljs.test :refer [deftest is testing]]
             [clojure.string :as str]
             [onteater.model.graph :as g]
+            [onteater.model.docs :as docs]
             [onteater.format.core :as fmt]
             [onteater.format.geo :as geo]))
 
@@ -136,6 +137,106 @@
     (is (not (some #{"geo:MaterialEntity"} ids)))
     (is (= "EDITED AGENT"
            (->> spine (filter #(= (get % "id") "geo:Agent")) first (#(get % "gloss")))))))
+
+;; --- docs sections -----------------------------------------------------------
+
+(defn- update-section
+  "Apply `f` to the docs tree of the section at `path`."
+  [model path f]
+  (update model :docs
+          (fn [ss] (mapv #(if (= path (:path %)) (update % :value f) %) ss))))
+
+(defn- json-keys [obj] (vec (js/Object.keys obj)))
+
+(deftest parse-extracts-docs-sections
+  (let [model (geo/parse-str (read-sample))
+        paths (set (map :path (:docs model)))]
+    (testing "whole prose sections become docs"
+      (is (contains? paths ["metadata"]))
+      (is (contains? paths ["worked_examples"]))
+      (is (contains? paths ["design_decisions"]))
+      (is (contains? paths ["revision_notes"]))
+      (is (contains? paths ["governance"])))
+    (testing "prose children of mixed node/prose sections become docs"
+      (is (contains? paths ["axioms" "axioms"]))
+      (is (contains? paths ["prospectus_alignment" "alignments"])))
+    (testing "node-bearing and structural content is excluded"
+      (is (not-any? #(= "modules" (first %)) paths))
+      (is (not (contains? paths ["namespaces"])))
+      (is (not (contains? paths ["spine" "classes"])))
+      (is (not (contains? paths ["axioms" "supporting_classes"]))))
+    (testing "docs items with id-but-no-kind are prose, not nodes"
+      (is (nil? (g/node model "A1"))))
+    (testing "the parse-time docs-index mirrors the sections"
+      (is (= (:docs model)
+             (get-in model [:meta :onteater/geo :docs-index]))))))
+
+(deftest edit-docs-value-touches-only-that-value
+  (let [raw    (read-sample)
+        model  (geo/parse-str raw)
+        edited (update-section model ["metadata"]
+                               #(docs/set-at % ["subtitle"] "EDITED SUBTITLE"))
+        out    (geo/serialize-model edited)
+        before (js/JSON.parse raw)
+        after  (js/JSON.parse out)]
+    (testing "the edited value landed"
+      (is (= "EDITED SUBTITLE" (aget after "metadata" "subtitle"))))
+    (testing "metadata key order is preserved"
+      (is (= (json-keys (aget before "metadata"))
+             (json-keys (aget after "metadata")))))
+    (testing "top-level key order is preserved and nothing else changed"
+      (is (= (json-keys before) (json-keys after)))
+      (is (= (dissoc (json-data raw) "metadata")
+             (dissoc (json-data out) "metadata"))))))
+
+(deftest add-and-remove-docs-list-items
+  (let [raw   (read-sample)
+        model (geo/parse-str raw)
+        n     (count (get-in (json-data raw) ["design_decisions" "decisions"]))]
+    (testing "adding an item appends a blank-like sibling clone"
+      (let [added (update-section model ["design_decisions"]
+                                  #(docs/vec-add % ["decisions"]))
+            after (json-data (geo/serialize-model added))
+            ds    (get-in after ["design_decisions" "decisions"])]
+        (is (= (inc n) (count ds)))
+        (is (= (set (keys (nth ds (dec n)))) (set (keys (last ds)))))
+        (is (every? #(= "" %) (vals (last ds))))))
+    (testing "removing the first item shifts the rest up"
+      (let [first-id (get-in (json-data raw) ["design_decisions" "decisions" 0 "id"])
+            removed  (update-section model ["design_decisions"]
+                                     #(docs/remove-at % ["decisions" 0]))
+            after    (json-data (geo/serialize-model removed))
+            ds       (get-in after ["design_decisions" "decisions"])]
+        (is (= (dec n) (count ds)))
+        (is (not-any? #(= first-id (get % "id")) ds))))))
+
+(deftest remove-and-add-whole-docs-sections
+  (let [raw   (read-sample)
+        model (geo/parse-str raw)]
+    (testing "removing a section drops its top-level key"
+      (let [pruned (update model :docs (fn [ss] (vec (remove #(= ["governance"] (:path %)) ss))))
+            after  (json-data (geo/serialize-model pruned))]
+        (is (not (contains? after "governance")))
+        (is (= (dissoc (json-data raw) "governance") after))))
+    (testing "adding a section appends a new top-level key"
+      (let [added (update model :docs conj
+                          {:path ["curation_notes"]
+                           :value {:t :map :entries [["status" {:t :val :v "draft"}]]}})
+            after (json-data (geo/serialize-model added))]
+        (is (= {"status" "draft"} (get after "curation_notes")))))))
+
+(deftest docs-edit-and-node-edit-coexist
+  (let [raw    (read-sample)
+        model  (geo/parse-str raw)
+        m2     (-> model
+                   (g/set-node-attr "geo:Agent" :gloss "EDITED AGENT")
+                   (update-section ["worked_examples"]
+                                   #(docs/set-at % ["examples" 0 "name"] "EDITED EXAMPLE")))
+        after  (json-data (geo/serialize-model m2))]
+    (is (= "EDITED EXAMPLE" (get-in after ["worked_examples" "examples" 0 "name"])))
+    (is (= "EDITED AGENT"
+           (->> (get-in after ["spine" "classes"])
+                (filter #(= (get % "id") "geo:Agent")) first (#(get % "gloss")))))))
 
 (deftest detection-is-confident
   (is (>= (geo/detect-str (read-sample)) 0.9))

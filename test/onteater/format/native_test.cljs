@@ -43,7 +43,18 @@
       (is (= (:nodes model) (:nodes back)))
       (is (= (:edges model) (:edges back)))
       (is (= (:groups model) (:groups back)))
-      (is (= (:residual model) (:residual back))))))
+      (is (= (:residual model) (:residual back))))
+    (testing "docs sections and the parse-time docs-index survive"
+      (is (seq (:docs model)))
+      (is (= (:docs model) (:docs back)))
+      (is (= (:meta model) (:meta back))))))
+
+(deftest native-without-docs-still-parses
+  (let [m   (rich-model)
+        out (native/serialize-model m)]
+    (testing "a docs-less model emits no docs key and parses without one"
+      (is (not (contains? (js->clj (js/JSON.parse out)) "docs")))
+      (is (not (contains? (native/parse-str out) :docs))))))
 
 (deftest native-detection
   (is (= 0.99 (native/detect-str (native/serialize-model (rich-model)))))

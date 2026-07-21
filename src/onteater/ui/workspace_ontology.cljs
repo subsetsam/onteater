@@ -10,6 +10,7 @@
             [clojure.string :as str]
             [onteater.ui.brand :as brand]
             [onteater.ui.canvas :as canvas]
+            [onteater.ui.docs :as docs]
             [onteater.ui.outline :as outline]
             [onteater.ui.inspector :as inspector]))
 
@@ -52,7 +53,17 @@
          {:on-click #(swap! collapsed update :outline not)
           :title "Toggle outline"}
          (if (:outline @collapsed) "›" "‹")]
-        [:section.pane.pane-canvas [canvas/view]]
+        (let [center @(rf/subscribe [:ontology/center-view])]
+          [:section.pane.pane-canvas
+           [:div.center-view-bar
+            [:button.chip {:class (when (= center :graph) "chip-active")
+                           :on-click #(rf/dispatch [:ontology/set-center-view :graph])}
+             "Graph"]
+            [:button.chip {:class (when (= center :docs) "chip-active")
+                           :on-click #(rf/dispatch [:ontology/set-center-view :docs])}
+             "Docs"]]
+           [:div.center-view-body
+            (if (= center :docs) [docs/view] [canvas/view])]])
         [:button.pane-toggle.toggle-inspector
          {:on-click #(swap! collapsed update :inspector not)
           :title "Toggle inspector"}

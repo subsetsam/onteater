@@ -58,6 +58,8 @@
             (assoc-in [:ontology :selection] {:node nil :edge nil :pinned #{}})
             (assoc-in [:ontology :view-spec] db/default-view-spec)
             (assoc-in [:ontology :outline] {:query "" :filters {} :expanded #{}})
+            (assoc-in [:ontology :center-view] :graph)
+            (assoc-in [:ontology :docs-ui] {:expanded #{}})
             (assoc-in [:ontology :breadcrumbs] [])
             (assoc-in [:ontology :undo] [])
             (assoc-in [:ontology :redo] [])

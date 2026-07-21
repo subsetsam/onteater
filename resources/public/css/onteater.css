@@ -765,3 +765,60 @@ mark.excerpt-selected { background: var(--accent-weak); }
                   background: var(--bg-sunken); color: var(--text); border: 1px solid var(--border);
                   border-radius: var(--radius-sm); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
                   font-size: 12px; line-height: 1.5; }
+
+/* ==========================================================================
+ * Docs view — ontology documentation sections (center pane, Graph|Docs toggle)
+ * ========================================================================== */
+.center-view-bar { display: flex; gap: 4px; padding: 6px 12px; border-bottom: 1px solid var(--border);
+                   background: var(--bg-panel); flex: 0 0 auto; }
+.center-view-body { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
+
+.docs-pane { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.docs-toolbar { display: flex; gap: 4px; padding: 8px 16px 6px; flex: 0 0 auto; }
+.docs-scroll { flex: 1; overflow-y: auto; padding: 4px 16px 24px; max-width: 860px; width: 100%;
+               margin: 0 auto; box-sizing: border-box; }
+.docs-empty { color: var(--text-muted); padding: 24px 4px; }
+
+.docs-group { margin: 14px 0 6px; }
+.docs-group-head { display: flex; align-items: baseline; gap: 10px; padding: 4px 2px; }
+.docs-group-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+                    color: var(--text-faint); }
+.docs-group-hint { font-size: 12px; color: var(--text-faint); font-style: italic; }
+
+.docs-section { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-panel);
+                margin: 8px 0; }
+.docs-section-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer;
+                     user-select: none; }
+.docs-section-head:hover { background: var(--accent-weak); }
+.docs-section-label { font-size: 14px; font-weight: 600; color: var(--text); }
+.docs-section-key { flex: 1; font-size: 11px; color: var(--text-faint); font-family: var(--mono); }
+.docs-section-body { padding: 4px 12px 12px 26px; border-top: 1px solid var(--border); }
+
+.doc-scalar { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+.doc-text, .doc-num { font-size: 13px; }
+.doc-num { max-width: 140px; }
+.doc-check { width: 15px; height: 15px; accent-color: var(--accent); }
+.doc-type-picker { display: flex; gap: 2px; opacity: 0.35; }
+.doc-scalar:hover .doc-type-picker { opacity: 1; }
+.doc-type-btn { border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-faint);
+                font-size: 10px; font-family: var(--mono); padding: 2px 5px; border-radius: var(--radius-sm); }
+.doc-type-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.doc-vec { display: flex; flex-direction: column; gap: 6px; margin: 4px 0; }
+.doc-vec-row { display: flex; align-items: flex-start; gap: 6px; }
+.doc-vec-item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 8px;
+                background: var(--bg); }
+.doc-vec-item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.doc-idx { font-size: 11px; color: var(--text-faint); font-family: var(--mono); }
+.doc-vec .btn { align-self: flex-start; }
+
+.doc-map { display: flex; flex-direction: column; gap: 6px; margin: 4px 0; }
+.doc-map-row { display: flex; align-items: flex-start; gap: 6px; }
+.doc-map-row > .doc-key { flex: 0 0 30%; min-width: 110px; max-width: 240px; }
+.doc-map-val { flex: 1; min-width: 0; }
+.doc-map .btn { align-self: flex-start; }
+
+.docs-add-row { display: flex; gap: 8px; align-items: center; margin: 16px 0 0; padding-top: 12px;
+                border-top: 1px solid var(--border); }
+.docs-add-key { flex: 0 1 260px; font-family: var(--mono); font-size: 13px; }
+.docs-add-kind { flex: 0 0 auto; width: auto; }
