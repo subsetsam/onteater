@@ -78,10 +78,10 @@ refusal to mark it to market.
 
 ## Analyst's afterword
 
-Alderaan is the cleanest natural experiment the corpus offers on the question
-posed by Research Problem 4: whether terror capacity substitutes for institutional
-capacity or merely liquidates it on a delay. One reading of the evidence is
-available to any coder: the Empire spent two decades and a fiscally distorting
-megaproject to purchase an instrument whose single use produced the coalition
-that destroyed it. Fear kept the local systems in line for four days. The
-committee is not aware of a shorter half-life anywhere in the literature.
+Alderaan is the cleanest natural experiment the corpus offers on the question of 
+whether terror capacity substitutes for institutional capacity or merely liquidates 
+it on a delay. One reading of the evidence is available to any coder: the Empire 
+spent two decades and a fiscally distorting megaproject to purchase an instrument 
+whose single use produced the coalition that destroyed it. Fear kept the local 
+systems in line for four days. The committee is not aware of a shorter half-life 
+anywhere in the literature.
